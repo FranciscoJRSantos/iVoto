@@ -9,8 +9,9 @@ import java.net.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.io.*;
+import java.util.concurrent.TimeoutException;
 
-public class RMIServer extends UnicastRemoteObject implements Server {
+public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   private static final long serialVersionUID = 1L;
   public static final String rmiConfig = "rmi.txt";
@@ -28,10 +29,9 @@ public class RMIServer extends UnicastRemoteObject implements Server {
 
   }
 
-  public void init(){
+  public void init() throws RemoteException{
 
     // Reading RMI Config file
-
     try{
       BufferedReader configReader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(rmiConfig)));
       registryPort = Integer.parseInt(configReader.readLine());
@@ -88,18 +88,18 @@ public class RMIServer extends UnicastRemoteObject implements Server {
             mainSocket = new DatagramSocket(6666);
 
             System.out.println("main socket listening on 6666");
-            mainSocket.setSoTimeout(5000);
+
             while(true){
 
               byte[] reply = new byte[1024];
 
-            // Receiving ping
+              // Receiving ping
               DatagramPacket ping = new DatagramPacket(reply,reply.length);
               mainSocket.receive(ping);
 
               System.out.println("Received from backup server: " + new String(ping.getData(), 0, ping.getLength()));
 
-            // Sending pong
+              // Sending pong
               byte[] msgByte = pingMsg.getBytes();
 
               DatagramPacket pong = new DatagramPacket(msgByte,msgByte.length,ping.getAddress(),ping.getPort());
@@ -120,7 +120,7 @@ public class RMIServer extends UnicastRemoteObject implements Server {
             continue;
 
           }catch(IOException ioe){
-            System.out.println("IOException: " + ioe.getMessage());
+            //System.out.println("IOException: " + ioe.getMessage());
           }finally{if (mainSocket != null) mainSocket.close();}
 
         }
@@ -143,6 +143,7 @@ public class RMIServer extends UnicastRemoteObject implements Server {
 
         DatagramSocket backupSocket = null;
 
+        int failover = 5;
 
         String pingMsg = "Ping";
 
@@ -161,17 +162,15 @@ public class RMIServer extends UnicastRemoteObject implements Server {
               InetAddress host = InetAddress.getByName("localhost");
               int sndPort = 6666;
 
-            // Sending ping
+              // Sending ping
               DatagramPacket ping = new DatagramPacket(msgByte,msgByte.length,host,sndPort);
               backupSocket.send(ping);
 
-            // Receiving pong
+              // Receiving pong
               byte[] reply = new byte[1024];
 
               DatagramPacket pong = new DatagramPacket(reply,reply.length);
               backupSocket.receive(pong);
-
-            // If nothing is received failover countdown starts
 
               System.out.println("Received from main server: " + new String(pong.getData(), 0, pong.getLength()));
 
@@ -179,7 +178,7 @@ public class RMIServer extends UnicastRemoteObject implements Server {
               {
                 Thread.sleep(1000);
               } 
-              catch(InterruptedException ex) 
+              catch(InterruptedException ie) 
               {
                 Thread.currentThread().interrupt();
               }
@@ -189,9 +188,24 @@ public class RMIServer extends UnicastRemoteObject implements Server {
             System.out.println("SocketException: " + se.getMessage());
             continue;
           }catch(IOException ioe){
-            System.out.println("IOException: " + ioe.getMessage());
-          }
+            // System.out.println("IOException: " + ioe.getMessage());
+            if (failover == 0){
+              // TODO: Failover mechanic 
+              System.out.println("");
+              try        
+              {
+                Thread.currentThread().join();
+              } 
+              catch(InterruptedException ie){}
 
+            }
+            else{
+              failover--;
+              System.out.print(".");
+            }
+          }catch(Exception e){
+            System.out.println("Exception: " + e.getMessage());
+          }
         }
       }
 
