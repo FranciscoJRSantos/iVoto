@@ -69,10 +69,11 @@ public class RMIServer extends UnicastRemoteObject implements Server {
 
   }
 
+  // UDP Server (Cause it's listening for requests)
+
   public void mainConnection() throws RemoteException{
 
     Thread mainConnection = new Thread(new Runnable(){
-
 
       @Override
       public void run(){
@@ -80,9 +81,6 @@ public class RMIServer extends UnicastRemoteObject implements Server {
         DatagramSocket mainSocket = null;
 
         String pingMsg = "Pong";
-
-
-        System.out.println("OIIIIIIIIIIIIIIIIIII");
 
         try{
 
@@ -95,20 +93,27 @@ public class RMIServer extends UnicastRemoteObject implements Server {
             byte[] reply = new byte[1024];
 
             // Receiving ping
-            DatagramPacket pong = new DatagramPacket(reply,reply.length);
-            mainSocket.receive(pong);
+            DatagramPacket ping = new DatagramPacket(reply,reply.length);
+            mainSocket.receive(ping);
 
-            System.out.println(new String(pong.getData(), 0, pong.getLength()));
+            System.out.println("Received from backup server: " + new String(ping.getData(), 0, ping.getLength()));
 
             // Sending pong
             byte[] msgByte = pingMsg.getBytes();
 
-            DatagramPacket ping = new DatagramPacket(msgByte,msgByte.length,pong.getAddress(),pong.getPort());
-            mainSocket.send(ping);
+            DatagramPacket pong = new DatagramPacket(msgByte,msgByte.length,ping.getAddress(),ping.getPort());
+            mainSocket.send(pong);
+
+            try        
+            {
+              Thread.sleep(3000);
+            } 
+            catch(InterruptedException ex) 
+            {
+              Thread.currentThread().interrupt();
+            }
 
           }
-
-
         }catch(SocketException se){
           System.out.println("SocketException: " + se.getMessage());
         }catch(IOException ioe){
@@ -121,6 +126,8 @@ public class RMIServer extends UnicastRemoteObject implements Server {
     mainConnection.start();
   } 
 
+  // UDP Client (Cause it's sending requests)
+
   public void backupConnection() throws RemoteException{
 
     Thread backupConnection = new Thread(new Runnable(){
@@ -132,13 +139,15 @@ public class RMIServer extends UnicastRemoteObject implements Server {
 
         String pingMsg = "Ping";
 
+        int failover = 5;
+
         System.out.println("XAUUUUUUUUUUUUUUUUU");
 
         try{
 
-          backupSocket = new DatagramSocket(6666);
+          backupSocket = new DatagramSocket();
 
-          while(true){
+          while(failover > 0){
 
             byte[] msgByte = pingMsg.getBytes();
 
@@ -155,9 +164,25 @@ public class RMIServer extends UnicastRemoteObject implements Server {
 
             DatagramPacket pong = new DatagramPacket(reply,reply.length);
             backupSocket.receive(pong);
-            System.out.println(new String(pong.getData(), 0, pong.getLength()));
-          }
 
+            // If nothing is received failover countdown starts
+
+            if (pong.getLength() == 0){
+              failover--;
+            }
+
+            System.out.println("Received from main server: " + new String(pong.getData(), 0, pong.getLength()));
+            System.out.println("Failover: " + failover);
+
+            try        
+            {
+              Thread.sleep(3000);
+            } 
+            catch(InterruptedException ex) 
+            {
+              Thread.currentThread().interrupt();
+            }
+          }
 
         }catch(SocketException se){
           System.out.println("SocketException: " + se.getMessage());
@@ -169,29 +194,6 @@ public class RMIServer extends UnicastRemoteObject implements Server {
 
     backupConnection.start();
 
-    /*Thread backupReceive = new Thread(new Runnable(){
-
-      @Override
-      public void run(){
-
-        DatagramSocket rcvSckt = null;
-
-        try{
-
-          rcvSckt = new DatagramSocket();
-
-          while(true){
-
-            InetAddress host = InetAddress.getByName("localhost");
-            int rcvPort = 6666;
-
-          }
-        }catch(SocketException se){
-          System.out.println("SocketException: " + se.getMessage());
-        }
-
-      }
-    });*/
   }
 
 }
