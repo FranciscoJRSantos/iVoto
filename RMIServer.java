@@ -58,7 +58,7 @@ public class RMIServer extends UnicastRemoteObject implements Server {
       System.out.println("Starting Backup Server");
       try{
         new RMIServer().backupConnection();
-        System.out.println("Remote");
+        System.out.println("Backup Server Running");
       }catch(RemoteException re){
         System.out.println("RemoteException: " + re.getMessage());
       }
@@ -82,44 +82,50 @@ public class RMIServer extends UnicastRemoteObject implements Server {
 
         String pingMsg = "Pong";
 
-        try{
+        while(true){
+          try{
 
-          mainSocket = new DatagramSocket(6666);
+            mainSocket = new DatagramSocket(6666);
 
-          System.out.println("main socket listening on 6666");
+            System.out.println("main socket listening on 6666");
+            mainSocket.setSoTimeout(5000);
+            while(true){
 
-          while(true){
-
-            byte[] reply = new byte[1024];
+              byte[] reply = new byte[1024];
 
             // Receiving ping
-            DatagramPacket ping = new DatagramPacket(reply,reply.length);
-            mainSocket.receive(ping);
+              DatagramPacket ping = new DatagramPacket(reply,reply.length);
+              mainSocket.receive(ping);
 
-            System.out.println("Received from backup server: " + new String(ping.getData(), 0, ping.getLength()));
+              System.out.println("Received from backup server: " + new String(ping.getData(), 0, ping.getLength()));
 
             // Sending pong
-            byte[] msgByte = pingMsg.getBytes();
+              byte[] msgByte = pingMsg.getBytes();
 
-            DatagramPacket pong = new DatagramPacket(msgByte,msgByte.length,ping.getAddress(),ping.getPort());
-            mainSocket.send(pong);
+              DatagramPacket pong = new DatagramPacket(msgByte,msgByte.length,ping.getAddress(),ping.getPort());
+              mainSocket.send(pong);
 
-            try        
-            {
-              Thread.sleep(3000);
-            } 
-            catch(InterruptedException ex) 
-            {
-              Thread.currentThread().interrupt();
+              try        
+              {
+                Thread.sleep(1000);
+              } 
+              catch(InterruptedException ex) 
+              {
+                Thread.currentThread().interrupt();
+              }
+
             }
+          }catch(SocketException se){
+            System.out.println("SocketException: " + se.getMessage());
+            continue;
 
-          }
-        }catch(SocketException se){
-          System.out.println("SocketException: " + se.getMessage());
-        }catch(IOException ioe){
-          System.out.println("IOException: " + ioe.getMessage());
-        }finally{if (mainSocket != null) mainSocket.close();}
+          }catch(IOException ioe){
+            System.out.println("IOException: " + ioe.getMessage());
+          }finally{if (mainSocket != null) mainSocket.close();}
+
+        }
       }
+
 
     });
 
@@ -137,59 +143,58 @@ public class RMIServer extends UnicastRemoteObject implements Server {
 
         DatagramSocket backupSocket = null;
 
+
         String pingMsg = "Ping";
 
-        int failover = 5;
+        while(true){
 
-        System.out.println("XAUUUUUUUUUUUUUUUUU");
+          try{
 
-        try{
+            backupSocket = new DatagramSocket();
 
-          backupSocket = new DatagramSocket();
+            backupSocket.setSoTimeout(1000);
 
-          while(failover > 0){
+            while(true){
 
-            byte[] msgByte = pingMsg.getBytes();
+              byte[] msgByte = pingMsg.getBytes();
 
-            InetAddress host = InetAddress.getByName("localhost");
-            int sndPort = 6666;
+              InetAddress host = InetAddress.getByName("localhost");
+              int sndPort = 6666;
 
             // Sending ping
-
-            DatagramPacket ping = new DatagramPacket(msgByte,msgByte.length,host,sndPort);
-            backupSocket.send(ping);
+              DatagramPacket ping = new DatagramPacket(msgByte,msgByte.length,host,sndPort);
+              backupSocket.send(ping);
 
             // Receiving pong
-            byte[] reply = new byte[1024];
+              byte[] reply = new byte[1024];
 
-            DatagramPacket pong = new DatagramPacket(reply,reply.length);
-            backupSocket.receive(pong);
+              DatagramPacket pong = new DatagramPacket(reply,reply.length);
+              backupSocket.receive(pong);
 
             // If nothing is received failover countdown starts
 
-            if (pong.getLength() == 0){
-              failover--;
+              System.out.println("Received from main server: " + new String(pong.getData(), 0, pong.getLength()));
+
+              try        
+              {
+                Thread.sleep(1000);
+              } 
+              catch(InterruptedException ex) 
+              {
+                Thread.currentThread().interrupt();
+              }
             }
 
-            System.out.println("Received from main server: " + new String(pong.getData(), 0, pong.getLength()));
-            System.out.println("Failover: " + failover);
-
-            try        
-            {
-              Thread.sleep(3000);
-            } 
-            catch(InterruptedException ex) 
-            {
-              Thread.currentThread().interrupt();
-            }
+          }catch(SocketException se){
+            System.out.println("SocketException: " + se.getMessage());
+            continue;
+          }catch(IOException ioe){
+            System.out.println("IOException: " + ioe.getMessage());
           }
 
-        }catch(SocketException se){
-          System.out.println("SocketException: " + se.getMessage());
-        }catch(IOException ioe){
-          System.out.println("IOException: " + ioe.getMessage());
-        }finally{if (backupSocket !=null) backupSocket.close();}
+        }
       }
+
     });
 
     backupConnection.start();
