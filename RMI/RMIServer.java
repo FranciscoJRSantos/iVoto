@@ -13,205 +13,121 @@ import java.util.concurrent.TimeoutException;
 
 public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
+  static int rmiPort; // 1099
+  static String rmiName;
+  static int udpPort; // 6666
+  static UDPConnection  heartbeat = null;
+
   private static final long serialVersionUID = 1L;
-  public static final String rmiConfig = "rmi.txt";
-  private static int registryPort; // 1099
-  private static String bindName;
 
   public RMIServer() throws RemoteException {
     super();
+
+    RMIConfigLoader newConfig = new RMIConfigLoader();
+    rmiName = newConfig.getRMIName();
+    rmiPort = newConfig.getRMIPort();
   }
 
 
   public static void main(String args[]) throws RemoteException{
 
-    new RMIServer().init();
-
-  }
-
-  public void init() throws RemoteException{
-
-    // Reading RMI Config file
-    try{
-      BufferedReader configReader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(rmiConfig)));
-      registryPort = Integer.parseInt(configReader.readLine());
-      bindName = configReader.readLine();
-      configReader.close();
-    }
-    catch(Exception e){
-      System.out.println("Error opening RMI Config File");
-      System.exit(1);
-    }
-
-    // Starting RMI Main Server
-
     try{
 
-      RMIServer rmi = new RMIServer();
-      Registry registry = LocateRegistry.createRegistry(registryPort);
-      registry.rebind(bindName,rmi);
-      System.out.println("RMI Server " + bindName + " ready on port " + registryPort +"!");
-      rmi.mainConnection();
-    }
-    catch(ExportException ee){
-      //System.out.println("Export Exception in RMIServer.main " + ee.getMessage());
-      System.out.println("Starting Backup Server");
+      RMIServer rmiServer = new RMIServer();
+
+      System.out.println(rmiName);
+      Registry r = LocateRegistry.createRegistry(rmiPort);
+      Naming.rebind(rmiName,rmiServer);
+
+      System.out.println("Main RMIServer Started");
+
+      heartbeat = new UDPConnection();
+
+    } catch(ExportException ee){
+
       try{
-        new RMIServer().backupConnection();
-        System.out.println("Backup Server Running");
-      }catch(RemoteException re){
-        System.out.println("RemoteException: " + re.getMessage());
+
+        RMIServer backup = new RMIServer();
+
+      } catch ( RemoteException re) {
+        System.out.println("RemoteException: ");
+        return;
       }
-    }
-    catch(RemoteException re){
-      //System.out.println("Remote Exception in RMIServer.main " + re.getMessage());
-    }
+
+      System.out.println("Backup RMIServer Starting");
+      
+    } catch(RemoteException re){
+      System.out.println("RemoteException: " + re);
+      return; 
+    } catch(MalformedURLException murle){
+      System.out.println("MalformedURLException: " + murle);
+      return;
+    } 
 
   }
 
-  // UDP Server (Cause it's listening for requests)
+  static class UDPConnection extends Thread {
 
-  public void mainConnection() throws RemoteException{
+    static DatagramSocket aSocket;
+    static int udpPort;
+    static int pingFrequency;
+    static int retries;
 
-    Thread mainConnection = new Thread(new Runnable(){
+    public UDPConnection(){
 
-      @Override
-      public void run(){
+      RMIConfigLoader config = new RMIConfigLoader();
+      udpPort = config.getUDPPort();
+      pingFrequency = config.getPingFrequency();
+      retries = config.getRetries();
+      aSocket = null;
+      this.start();
 
-        DatagramSocket mainSocket = null;
+    }
 
-        String pingMsg = "Pong";
+    @Override
+    public void run(){
 
-        while(true){
-          try{
+      byte [] buffer = new byte[1024];
 
-            mainSocket = new DatagramSocket(6666);
+      while(true){
 
-            System.out.println("main socket listening on 6666");
+        try{
 
-            while(true){
+          aSocket = new DatagramSocket(udpPort);
+          aSocket.setSoTimeout(pingFrequency);
 
-              byte[] reply = new byte[1024];
+          int i = 0;
 
-              // Receiving ping
-              DatagramPacket ping = new DatagramPacket(reply,reply.length);
-              mainSocket.receive(ping);
+          do {
 
-              System.out.println("Received from backup server: " + new String(ping.getData(), 0, ping.getLength()));
+            try{
 
-              // Sending pong
-              byte[] msgByte = pingMsg.getBytes();
+              byte [] message = "ping pong".getBytes();
 
-              DatagramPacket pong = new DatagramPacket(msgByte,msgByte.length,ping.getAddress(),ping.getPort());
-              mainSocket.send(pong);
+              DatagramPacket toSend = new DatagramPacket(message,message.length,InetAddress.getByName("localhost"),udpPort);
+              aSocket.send(toSend);
+              System.out.println("[UDP] Ping");
+              DatagramPacket toReceive = new DatagramPacket(buffer,buffer.length);
+              aSocket.receive(toReceive);
+              System.out.println("[UDP] Pong");
+              i=0;
 
-              try        
-              {
-                Thread.sleep(1000);
-              } 
-              catch(InterruptedException ex) 
-              {
-                Thread.currentThread().interrupt();
-              }
-
+            } catch (SocketTimeoutException ste){
+              i++;
+            } catch (IOException ioe){
+              System.out.println("Problemas de rede");
             }
-          }catch(SocketException se){
-            System.out.println("SocketException: " + se.getMessage());
-            continue;
 
-          }catch(IOException ioe){
-            //System.out.println("IOException: " + ioe.getMessage());
-          }finally{if (mainSocket != null) mainSocket.close();}
+          }while(i < retries);
+
+        } catch (SocketException se) {
+
 
         }
+
       }
 
-
-    });
-
-    mainConnection.start();
-  } 
-
-  // UDP Client (Cause it's sending requests)
-
-  public void backupConnection() throws RemoteException{
-
-    Thread backupConnection = new Thread(new Runnable(){
-
-      @Override
-      public void run(){
-
-        DatagramSocket backupSocket = null;
-
-        int failover = 5;
-
-        String pingMsg = "Ping";
-
-        while(true){
-
-          try{
-
-            backupSocket = new DatagramSocket();
-
-            backupSocket.setSoTimeout(1000);
-
-            while(true){
-
-              byte[] msgByte = pingMsg.getBytes();
-
-              InetAddress host = InetAddress.getByName("localhost");
-              int sndPort = 6666;
-
-              // Sending ping
-              DatagramPacket ping = new DatagramPacket(msgByte,msgByte.length,host,sndPort);
-              backupSocket.send(ping);
-
-              // Receiving pong
-              byte[] reply = new byte[1024];
-
-              DatagramPacket pong = new DatagramPacket(reply,reply.length);
-              backupSocket.receive(pong);
-
-              System.out.println("Received from main server: " + new String(pong.getData(), 0, pong.getLength()));
-
-              try        
-              {
-                Thread.sleep(1000);
-              } 
-              catch(InterruptedException ie) 
-              {
-                Thread.currentThread().interrupt();
-              }
-            }
-
-          }catch(SocketException se){
-            System.out.println("SocketException: " + se.getMessage());
-            continue;
-          }catch(IOException ioe){
-            // System.out.println("IOException: " + ioe.getMessage());
-            if (failover == 0){
-              // TODO: Failover mechanic 
-              System.out.println("");
-              try        
-              {
-                Thread.currentThread().join();
-              } 
-              catch(InterruptedException ie){}
-
-            }
-            else{
-              failover--;
-              System.out.print(".");
-            }
-          }catch(Exception e){
-            System.out.println("Exception: " + e.getMessage());
-          }
-        }
-      }
-
-    });
-
-    backupConnection.start();
+    }
 
   }
 
