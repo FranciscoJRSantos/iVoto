@@ -6,7 +6,7 @@ public class RMIConfigLoader{
 
   String rmiName;
   int rmiPort;
-  int udpPort;
+  int mainUDP,secUDP;
   int pingFrequency;
   int retries;
 
@@ -26,7 +26,8 @@ public class RMIConfigLoader{
 
       this.rmiName = prop.getProperty("rmiName");
       this.rmiPort = Integer.parseInt(prop.getProperty("rmiPort"));
-      this.udpPort = Integer.parseInt(prop.getProperty("udpPort"));
+      this.mainUDP = Integer.parseInt(prop.getProperty("mainUDP"));
+      this.secUDP = Integer.parseInt(prop.getProperty("secUDP"));
       this.pingFrequency = Integer.parseInt(prop.getProperty("pingFrequency"));
       this.retries = Integer.parseInt(prop.getProperty("retries"));
 
@@ -47,7 +48,9 @@ public class RMIConfigLoader{
 
   public String getRMIName() { return this.rmiName; }
 
-  public int getUDPPort() { return this.udpPort; }
+  public int getMainUDP() { return this.mainUDP; }
+
+  public int getSecUDP() { return this.secUDP; }
 
   public int getPingFrequency() { return this.pingFrequency; }
 

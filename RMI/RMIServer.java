@@ -16,7 +16,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   static int rmiPort; // 1099
   static String rmiName;
   static int udpPort; // 6666
-  static UDPConnection  heartbeat = null;
+  UDPConnection heartbeat = null;
+  boolean mainServer = true;
 
   private static final long serialVersionUID = 1L;
 
@@ -27,7 +28,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     rmiName = newConfig.getRMIName();
     rmiPort = newConfig.getRMIPort();
   }
-
 
   public static void main(String args[]) throws RemoteException{
 
@@ -40,14 +40,18 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       Naming.rebind(rmiName,rmiServer);
 
       System.out.println("Main RMIServer Started");
+      rmiServer.setMainServer(true);
+      rmiServer.startUDPConnection();
 
-      heartbeat = new UDPConnection();
 
     } catch(ExportException ee){
 
       try{
 
         RMIServer backup = new RMIServer();
+
+        backup.setMainServer(false);
+        backup.startUDPConnection();
 
       } catch ( RemoteException re) {
         System.out.println("RemoteException: ");
@@ -66,20 +70,25 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
-  static class UDPConnection extends Thread {
+  public void setMainServer(boolean n){ this.mainServer = n; }
 
-    static DatagramSocket aSocket;
-    static int udpPort;
-    static int pingFrequency;
-    static int retries;
+  public void startUDPConnection(){ this.heartbeat = new UDPConnection(mainServer); }
 
-    public UDPConnection(){
+  class UDPConnection extends Thread {
+
+    int mainUDP, secUDP;
+    int pingFrequency;
+    int retries;
+    boolean mainServer = true;
+
+    public UDPConnection(boolean serverType){
 
       RMIConfigLoader config = new RMIConfigLoader();
-      udpPort = config.getUDPPort();
+      mainUDP = config.getMainUDP();
+      secUDP = config.getSecUDP();
       pingFrequency = config.getPingFrequency();
       retries = config.getRetries();
-      aSocket = null;
+      mainServer = serverType;
       this.start();
 
     }
@@ -89,46 +98,102 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
       byte [] buffer = new byte[1024];
 
-      while(true){
+      if(mainServer == true){
 
-        try{
+        System.out.println("Is Main Server");
 
-          aSocket = new DatagramSocket(udpPort);
-          aSocket.setSoTimeout(pingFrequency);
+        while(true){
 
-          int i = 0;
+          try{
 
-          do {
+            DatagramSocket aSocket = new DatagramSocket(mainUDP);
+            aSocket.setSoTimeout(pingFrequency);
+            byte [] message = "ping pong".getBytes();
 
-            try{
+            int i = 0;
 
-              byte [] message = "ping pong".getBytes();
+            do {
 
-              DatagramPacket toSend = new DatagramPacket(message,message.length,InetAddress.getByName("localhost"),udpPort);
-              aSocket.send(toSend);
-              System.out.println("[UDP] Ping");
-              DatagramPacket toReceive = new DatagramPacket(buffer,buffer.length);
-              aSocket.receive(toReceive);
-              System.out.println("[UDP] Pong");
-              i=0;
+              try{
 
-            } catch (SocketTimeoutException ste){
-              i++;
-            } catch (IOException ioe){
-              System.out.println("Problemas de rede");
-            }
+                Thread.sleep(1000);
+                DatagramPacket toSend = new DatagramPacket(message,message.length,InetAddress.getByName("localhost"),secUDP);
+                aSocket.send(toSend);
+                System.out.println("[UDP] Ping");
+                DatagramPacket toReceive = new DatagramPacket(buffer,buffer.length);
+                aSocket.receive(toReceive);
+                System.out.println("[UDP] Pong");
+                i=0;
 
-          }while(i < retries);
+              } catch (SocketTimeoutException ste){
+                System.out.println("SocketTimeoutException: " + ste.getMessage());
+                i++;
+              } catch (IOException ioe){
+                System.out.println("Problemas de rede");
+              } catch (InterruptedException ie){
 
-        } catch (SocketException se) {
+              }
 
+            }while(i < retries);
+
+            
+
+          } catch (SocketException se) {
+
+
+          }
+
+        }
+
+      }
+      else if(mainServer == false){
+
+        System.out.println("Is Backup Server");
+
+        while(true){
+
+          try{
+
+            DatagramSocket aSocket = new DatagramSocket(secUDP);
+            aSocket.setSoTimeout(pingFrequency);
+            byte [] message = "ping pong".getBytes();
+
+            int i = 0;
+
+            do {
+
+              try{
+
+                Thread.sleep(1000);
+                DatagramPacket toSend = new DatagramPacket(message,message.length,InetAddress.getByName("localhost"),mainUDP);
+                aSocket.send(toSend);
+                System.out.println("[UDP] Ping");
+                DatagramPacket toReceive = new DatagramPacket(buffer,buffer.length);
+                aSocket.receive(toReceive);
+                System.out.println("[UDP] Pong");
+                i=0;
+
+              } catch (SocketTimeoutException ste){
+                System.out.println("SocketTimeoutException: " + ste.getMessage());
+                i++;
+              } catch (IOException ioe){
+                System.out.println("Problemas de rede");
+              } catch (InterruptedException ie){
+
+              }
+
+            }while(i < retries);
+
+          } catch (SocketException se) {
+
+
+          }
 
         }
 
       }
 
+      }
     }
 
   }
-
-}
