@@ -9,6 +9,8 @@ public class RMIConfigLoader{
   int mainUDP,secUDP;
   int pingFrequency;
   int retries;
+  String dbIP;
+  int dbPort;
 
   public RMIConfigLoader(){
     Properties prop = new java.util.Properties();
@@ -30,6 +32,8 @@ public class RMIConfigLoader{
       this.secUDP = Integer.parseInt(prop.getProperty("secUDP"));
       this.pingFrequency = Integer.parseInt(prop.getProperty("pingFrequency"));
       this.retries = Integer.parseInt(prop.getProperty("retries"));
+      this.dbIP = prop.getProperty("dbIP");
+      this.dbPort = Integer.parseInt(prop.getProperty("dbPort"));
 
     } catch (IOException ioe){
         ioe.printStackTrace();
@@ -55,5 +59,9 @@ public class RMIConfigLoader{
   public int getPingFrequency() { return this.pingFrequency; }
 
   public int getRetries() { return this.retries; }
+
+  public String getDBIP() { return this.dbIP; }
+
+  public int getDBPort() { return this.dbPort; }
 
 }

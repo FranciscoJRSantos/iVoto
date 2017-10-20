@@ -1,4 +1,4 @@
-/**
+/*
 * @created by FranciscoJRSantos at 09/10/2017
 * 
 **/
@@ -12,10 +12,13 @@ import java.io.*;
 import java.util.concurrent.TimeoutException;
 
 public class RMIServer extends UnicastRemoteObject implements ServerInterface {
-
-  static int rmiPort; // 1099
+  
+  static DatabaseConnection database = null;
   static String rmiName;
+  static int rmiPort; // 1099
   static int udpPort; // 6666
+  static String dbIP;
+  static int dbPort;
   UDPConnection heartbeat = null;
   boolean mainServer = true;
 
@@ -27,39 +30,39 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     RMIConfigLoader newConfig = new RMIConfigLoader();
     rmiName = newConfig.getRMIName();
     rmiPort = newConfig.getRMIPort();
+    dbIP = newConfig.getDBIP();
+    dbPort = newConfig.getDBPort();
+    database = new DatabaseConnection(dbIP,dbPort);
+    startRMIServer();
+
   }
 
   public static void main(String args[]) throws RemoteException{
 
+    RMIServer rmiServer = new RMIServer();
+
+  }
+
+  public void startRMIServer() {
+    
     try{
 
-      RMIServer rmiServer = new RMIServer();
-
-      System.out.println(rmiName);
       Registry r = LocateRegistry.createRegistry(rmiPort);
-      Naming.rebind(rmiName,rmiServer);
+      Naming.rebind(rmiName,this);
 
       System.out.println("Main RMIServer Started");
-      rmiServer.setMainServer(true);
-      rmiServer.startUDPConnection();
-
-
+      this.setMainServer(true);
+      if (this.heartbeat == null){
+        this.startUDPConnection();
+      }
     } catch(ExportException ee){
 
-      try{
-
-        RMIServer backup = new RMIServer();
-
-        backup.setMainServer(false);
-        backup.startUDPConnection();
-
-      } catch ( RemoteException re) {
-        System.out.println("RemoteException: ");
-        return;
-      }
-
+        this.setMainServer(false);
+        System.out.println(this.mainServer);
+        if (this.heartbeat == null){
+          this.startUDPConnection();
+        }
       System.out.println("Backup RMIServer Starting");
-      
     } catch(RemoteException re){
       System.out.println("RemoteException: " + re);
       return; 
@@ -67,7 +70,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       System.out.println("MalformedURLException: " + murle);
       return;
     } 
-
   }
 
   public void setMainServer(boolean n){ this.mainServer = n; }
@@ -86,10 +88,21 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       RMIConfigLoader config = new RMIConfigLoader();
       mainUDP = config.getMainUDP();
       secUDP = config.getSecUDP();
+
+      System.out.println("Main UDP: " + mainUDP);
+      System.out.println("Secondary UDP: " + secUDP);
+
       pingFrequency = config.getPingFrequency();
       retries = config.getRetries();
       mainServer = serverType;
       this.start();
+      System.out.println("UDPConnection Started");
+
+    }
+
+    public void startUDPConnection(boolean serverType){
+
+      UDPConnection udp = new UDPConnection(serverType);
 
     }
 
@@ -97,13 +110,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     public void run(){
 
       byte [] buffer = new byte[1024];
-
       if(mainServer == true){
 
-        System.out.println("Is Main Server");
-
         while(true){
-
           try{
 
             DatagramSocket aSocket = new DatagramSocket(mainUDP);
@@ -111,9 +120,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
             byte [] message = "ping pong".getBytes();
 
             int i = 0;
-
             do {
-
               try{
 
                 Thread.sleep(1000);
@@ -136,10 +143,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
             }while(i < retries);
 
-            
+            System.out.println("Backup Server failed! \n Retrying pings");
 
           } catch (SocketException se) {
-
 
           }
 
@@ -166,6 +172,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
                 Thread.sleep(1000);
                 DatagramPacket toSend = new DatagramPacket(message,message.length,InetAddress.getByName("localhost"),mainUDP);
+
                 aSocket.send(toSend);
                 System.out.println("[UDP] Ping");
                 DatagramPacket toReceive = new DatagramPacket(buffer,buffer.length);
@@ -184,8 +191,20 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
             }while(i < retries);
 
-          } catch (SocketException se) {
+            System.out.println("RMIServer failed \nAssuming Main Server Status");
 
+            i = 0;
+
+            try{
+              RMIServer.this.heartbeat = null;
+              RMIServer.this.mainServer = true;
+              RMIServer.this.startRMIServer();
+              Thread.currentThread().join();
+            } catch(InterruptedException ie){
+
+            }
+
+          } catch (SocketException se) {
 
           }
 
@@ -195,5 +214,4 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
       }
     }
-
   }
