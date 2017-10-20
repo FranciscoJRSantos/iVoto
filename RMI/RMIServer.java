@@ -51,7 +51,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       Naming.rebind(rmiName,this);
 
       System.out.println("Main RMIServer Started");
-      this.setMainServer(true);
+      System.out.println(this.heartbeat);
       if (this.heartbeat == null){
         this.startUDPConnection();
       }
@@ -199,6 +199,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
               RMIServer.this.heartbeat = null;
               RMIServer.this.mainServer = true;
               RMIServer.this.startRMIServer();
+              aSocket.close();
               Thread.currentThread().join();
             } catch(InterruptedException ie){
 

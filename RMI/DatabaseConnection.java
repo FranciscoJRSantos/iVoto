@@ -28,11 +28,11 @@ public class DatabaseConnection{
     try {
 
       connection = DriverManager.getConnection(
-          "jdbc:mysql:@localhost:1521:XE", "bd",
+          "jdbc:mysql://localhost:1521", "bd",
           "bd");
 
     } catch (SQLException e) {
-
+      e.printStackTrace();
       System.out.println("Connection Failed! Check output console");
       System.out.println("SQLException");
       return;
