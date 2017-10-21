@@ -4,7 +4,7 @@ import java.util.*;
 import java.rmi.RemoteException;
 
 
-public class Messages implements Serializable{
+public class Message implements Serializable{
 
   String message=null;
   String username=null;

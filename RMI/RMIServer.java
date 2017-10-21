@@ -43,6 +43,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
+  public synchronized Message sendMessage(Message parcel){
+  
+  }
+
   public void startRMIServer() {
     
     try{
