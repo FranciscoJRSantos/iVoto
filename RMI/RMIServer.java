@@ -9,6 +9,7 @@ import java.net.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.io.*;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 public class RMIServer extends UnicastRemoteObject implements ServerInterface {
@@ -43,8 +44,32 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
-  public synchronized Message sendMessage(Message parcel){
-  
+  public synchronized Message sendMessage(Message parcel) throws RemoteException{
+        ArrayList<String> aux = null;
+        Message toClient = null;
+        switch(parcel.getType()){
+
+          case 1:{
+            aux = database.submitQuery("SELECT ID FROM USER WHERE name='" + + "' AND hashed_password='" + + "'");
+            if (aux.isEmpty()){
+              toClient = new Message(false);
+            } else{
+              toClient = new Message(true);
+            }
+            break;
+          }
+          case 2:{
+            aux = database.submitQuery("SELECT * FROM USER WHERE name=' " + + "'");
+            if(aux.isEmpty()){
+              databse.submitQuery("INSERT INTO User()");
+            } else{
+            
+            }
+            break;
+          }
+        
+        }
+        return toClient;
   }
 
   public void startRMIServer() {
