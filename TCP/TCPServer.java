@@ -1,15 +1,15 @@
-// TCPServer2.java: Multithreaded server
-
 import java.net.*;
 import java.io.*;
 
 public class TCPServer {
+    static int tcpPort;
     public static void main(String args[]) {
         int numero = 0;
-
+        TCPConfigLoader newConfig = new TCPConfigLoader();
+        tcpPort = newConfig.getTCPPort();
         try {
             int serverPort = 12345;
-            System.out.println("Listening on port :" + serverPort);
+            System.out.println("Listening on port: " + serverPort);
             ServerSocket listenSocket = new ServerSocket(serverPort);
             System.out.println("LISTEN SOCKET=" + listenSocket);
             while (true) {
