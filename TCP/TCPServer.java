@@ -1,5 +1,3 @@
-// TCPServer2.java: Multithreaded server
-
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
@@ -51,9 +49,7 @@ class Connection extends Thread {
     public void run() {
         try {
             while (true) {
-                String s = in.readLine();
-                answerMessage(s);
-
+                answerMessage(in.readLine());
             }
 
         } catch (IOException e) {
@@ -63,6 +59,37 @@ class Connection extends Thread {
 
     private void answerMessage(String s) {
         Message m = new Message(s);
-        out.printf("type:%d, s3:%s, sList:%s\n", m.getType(), m.getS3(), m.getsList());
+        if (!m.getIsValid()){
+            out.println("Message not valid!");
+            return;
+        }
+        //out.printf("type:%d, s3:%s, sList:%s\n", m.getType(), m.getS3(), m.getsList());
+
+        switch (m.getType()){
+            case 0:
+                checkLoginInfo();
+                break;
+            case 1:
+                requestCandidates();
+                break;
+            case 2:
+                sendVote();
+                break;
+            default:
+                out.println("Type non-existent!");
+                break;
+        }
+    }
+
+    private void sendVote() {
+        //TODO
+    }
+
+    private void requestCandidates() {
+        //TODO
+    }
+
+    private void checkLoginInfo() {
+        //TODO
     }
 }
