@@ -93,7 +93,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean checkLogin(String username, String password) throws RemoteException {
     boolean toClient = true;
     ArrayList<String> aux;
-    String sql = "SELECT ID FROM User WHERE name='" + username + "'AND hashed_password='" + password + "'";
+    String sql = "SELECT ID FROM User WHERE name='" + username + "'AND hashed_password='" + password + "';";
     aux = database.submitQuery(sql);
     if(aux.isEmpty()){
       toClient = false;
@@ -104,30 +104,53 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   public ArrayList<String>  listCandidates(int mesavoto_id) throws RemoteException{
     
-    String sql = "SELECT NAME FROM Lista WHERE mesavoto_id='" + mesavoto_id + "'";
+    String sql = "SELECT NAME FROM Lista WHERE mesavoto_id='" + mesavoto_id + "';";
 
     return database.submitQuery(sql);
   
   }
 
-  public void vota(int cc, String lista, int eleicao_id) throws RemoteException{
+  public void vote(int cc, String lista, int eleicao_id) throws RemoteException{
   
     ArrayList<String> aux1;
-    String sql1 = "UPDATE Lista SET votos = votos +1 WHERE name='" + lista + "'";
+    String sql1 = "UPDATE Lista SET votos = votos +1 WHERE name='" + lista + "';";
     database.submitQuery(sql1);
-    String sql2 = "SELECT ID FROM User WHERE numeroCC='" + cc + "'";
+    String sql2 = "SELECT ID FROM User WHERE numeroCC='" + cc + "';";
     aux1 = database.submitQuery(sql2);
     System.out.println(aux1);
-    String sql3 = "SELECT ID FROM Eleicao WHERE ";
-    String sql4 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVote) VALUES('" + aux1 + "'" + "," + ",True)";
+    String sql3 = "SELECT ID FROM Eleicao WHERE ;k";
+    String sql4 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVote) VALUES('" + aux1 + "'" + "," + ",True);";
   
   }
 
+  // Admin Console
+  
+  public boolean addPerson(String name, String Address, int phone, int ccn, int ccv, int dep, int fac, String pass, int type) throws RemoteException{
+    
+    boolean toClient = true;
+    
+    String sql = "INSERT INTO User (name,hashed_password,contacto,morada,numeroCC,validadeCC,role,departamento_id,faculdade_id) VALUES('" + name + "','" + pass +"','"+ phone+"','"+Address+"','"+ccn+"','"+ccv+"','"+type+"','"+dep+"','"+fac+");";
+  
+  }
+  
   public ArrayList<String> viewCurrentElections() throws RemoteException{
     
     ArrayList<String> aux1;
     String sql1 = "SELECT ID AND titulo FROM Eleicao";
     return database.submitQuery(sql1);
+  }
+
+  public ArrayList<String> verDepartamentos() throws RemoteException{
+  
+    String sql1 = "SELECT ID AND nome FROM Departamento;";
+    return database.submitQuery(sql1);
+  }
+
+  public ArrayList<String> verFaculdades() throws RemoteException{
+  
+    String sql1 = "SELECT ID AND nome FROM Faculdade;";
+    return database.submitQuery(sql1);
+
   }
 
 
