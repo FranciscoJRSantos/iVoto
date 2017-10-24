@@ -1,7 +1,7 @@
 /*
-* @created by FranciscoJRSantos at 09/10/2017
-* 
-**/
+ * @created by FranciscoJRSantos at 09/10/2017
+ * 
+ **/
 
 import java.rmi.*;
 import java.rmi.server.*;
@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 public class RMIServer extends UnicastRemoteObject implements ServerInterface {
-  
+
   static DatabaseConnection database = null;
   static String rmiName;
   static int rmiPort; // 1099
@@ -26,11 +26,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   private static final long serialVersionUID = 1L;
 
   public RMIServer() throws RemoteException {
-    super();
 
     RMIConfigLoader newConfig = new RMIConfigLoader();
-    rmiName = newConfig.getRMIName();
-    rmiPort = newConfig.getRMIPort();
+    RMIServer.rmiName = newConfig.getRMIName();
+    RMIServer.rmiPort = newConfig.getRMIPort();
     dbIP = newConfig.getDBIP();
     dbPort = newConfig.getDBPort();
     database = new DatabaseConnection(dbIP,dbPort);
@@ -44,53 +43,24 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
-  public synchronized Message sendMessage(Message parcel) throws RemoteException{
-        ArrayList<String> aux = null;
-        Message toClient = null;
-        switch(parcel.getType()){
-
-          case 1:{
-            aux = database.submitQuery("SELECT ID FROM USER WHERE name='" + + "' AND hashed_password='" + + "'");
-            if (aux.isEmpty()){
-              toClient = new Message(false);
-            } else{
-              toClient = new Message(true);
-            }
-            break;
-          }
-          case 2:{
-            aux = database.submitQuery("SELECT * FROM USER WHERE name=' " + + "'");
-            if(aux.isEmpty()){
-              databse.submitQuery("INSERT INTO User()");
-            } else{
-            
-            }
-            break;
-          }
-        
-        }
-        return toClient;
-  }
-
   public void startRMIServer() {
-    
+
     try{
 
       Registry r = LocateRegistry.createRegistry(rmiPort);
       Naming.rebind(rmiName,this);
 
       System.out.println("Main RMIServer Started");
-      System.out.println(this.heartbeat);
       if (this.heartbeat == null){
         this.startUDPConnection();
       }
     } catch(ExportException ee){
 
-        this.setMainServer(false);
-        System.out.println(this.mainServer);
-        if (this.heartbeat == null){
-          this.startUDPConnection();
-        }
+      this.setMainServer(false);
+      System.out.println(this.mainServer);
+      if (this.heartbeat == null){
+        this.startUDPConnection();
+      }
       System.out.println("Backup RMIServer Starting");
     } catch(RemoteException re){
       System.out.println("RemoteException: " + re);
@@ -104,6 +74,62 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public void setMainServer(boolean n){ this.mainServer = n; }
 
   public void startUDPConnection(){ this.heartbeat = new UDPConnection(mainServer); }
+
+  // TCP Methods
+
+  public boolean checkID(int cc) throws RemoteException {
+    
+    boolean toClient = true;
+    ArrayList<String> aux;
+    String sql = "SELECT numeroCC FROM User WHERE numeroCC='" + cc + "'";
+    aux = database.submitQuery(sql);
+    if (aux.isEmpty()){
+      toClient = false;
+    }
+  
+    return toClient;
+  }
+
+  public boolean checkLogin(String username, String password) throws RemoteException {
+    boolean toClient = true;
+    ArrayList<String> aux;
+    String sql = "SELECT ID FROM User WHERE name='" + username + "'AND hashed_password='" + password + "'";
+    aux = database.submitQuery(sql);
+    if(aux.isEmpty()){
+      toClient = false;
+    }
+  
+    return toClient;
+  }
+
+  public ArrayList<String>  listCandidates(int mesavoto_id) throws RemoteException{
+    
+    String sql = "SELECT NAME FROM Lista WHERE mesavoto_id='" + mesavoto_id + "'";
+
+    return database.submitQuery(sql);
+  
+  }
+
+  public void vota(int cc, String lista, int eleicao_id) throws RemoteException{
+  
+    ArrayList<String> aux1;
+    String sql1 = "UPDATE Lista SET votos = votos +1 WHERE name='" + lista + "'";
+    database.submitQuery(sql1);
+    String sql2 = "SELECT ID FROM User WHERE numeroCC='" + cc + "'";
+    aux1 = database.submitQuery(sql2);
+    System.out.println(aux1);
+    String sql3 = "SELECT ID FROM Eleicao WHERE ";
+    String sql4 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVote) VALUES('" + aux1 + "'" + "," + ",True)";
+  
+  }
+
+  public ArrayList<String> viewCurrentElections() throws RemoteException{
+    
+    ArrayList<String> aux1;
+    String sql1 = "SELECT ID AND titulo FROM Eleicao";
+    return database.submitQuery(sql1);
+  }
+
 
   class UDPConnection extends Thread {
 
@@ -136,16 +162,19 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     }
 
     @Override
-    public void run(){
+      public void run(){
 
-      byte [] buffer = new byte[1024];
-      if(mainServer == true){
-
-        while(true){
+        DatagramSocket aSocket = null;
+        byte [] buffer = new byte[1024];
+        if(mainServer == true){
           try{
-
-            DatagramSocket aSocket = new DatagramSocket(mainUDP);
+            aSocket = new DatagramSocket(mainUDP);
             aSocket.setSoTimeout(pingFrequency);
+          } catch(SocketException se) {
+            se.printStackTrace();
+          }
+          while(true){
+
             byte [] message = "ping pong".getBytes();
 
             int i = 0;
@@ -168,29 +197,34 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
                 System.out.println("Problemas de rede");
               } catch (InterruptedException ie){
 
+                try{ Naming.unbind(RMIServer.rmiName); }
+                catch(RemoteException re){}
+                catch (NotBoundException nbe){}
+                catch (MalformedURLException murle){}
+
               }
 
             }while(i < retries);
 
             System.out.println("Backup Server failed! \n Retrying pings");
 
-          } catch (SocketException se) {
 
           }
 
         }
 
-      }
-      else if(mainServer == false){
-
-        System.out.println("Is Backup Server");
-
-        while(true){
+        else if(mainServer == false){
 
           try{
-
-            DatagramSocket aSocket = new DatagramSocket(secUDP);
+            aSocket = new DatagramSocket(secUDP);
             aSocket.setSoTimeout(pingFrequency);
+          } catch(SocketException se){
+            se.printStackTrace();
+          }
+          System.out.println("Is Backup Server");
+
+          while(true){
+
             byte [] message = "ping pong".getBytes();
 
             int i = 0;
@@ -222,8 +256,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
             System.out.println("RMIServer failed \nAssuming Main Server Status");
 
-            i = 0;
-
             try{
               RMIServer.this.heartbeat = null;
               RMIServer.this.mainServer = true;
@@ -234,14 +266,11 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
             }
 
-          } catch (SocketException se) {
-
           }
 
         }
 
       }
 
-      }
-    }
   }
+}

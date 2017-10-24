@@ -28,7 +28,7 @@ public class DatabaseConnection{
     try {
 
       connection = DriverManager.getConnection(
-          "jdbc:mysql://localhost:3306/ivotobd", "bd",
+          "jdbc:mysql://127.0.0.1:3306/ivotobd", "bd",
           "bd");
 
     } catch (SQLException e) {
