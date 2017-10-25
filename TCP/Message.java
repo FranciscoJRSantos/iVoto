@@ -19,10 +19,16 @@ public class Message {
             isValid = false;
             return;
         }
-        type = Integer.parseInt(split[0]);
-        i1 = Integer.parseInt(split[1]);
-        i2 = Integer.parseInt(split[2]);
-        i3 = Integer.parseInt(split[3]);
+        try {
+            type = Integer.parseInt(split[0]);
+            i1 = Integer.parseInt(split[1]);
+            i2 = Integer.parseInt(split[2]);
+            i3 = Integer.parseInt(split[3]);
+        } catch (NumberFormatException e){
+            isValid = false;
+            return;
+        }
+
         s1 = split[4];
         s2 = split[5];
         s3 = split[6];

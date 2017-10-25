@@ -1,6 +1,10 @@
+import sun.net.TransferProtocolClient;
+
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 
 public class TCPServer {
@@ -12,6 +16,8 @@ public class TCPServer {
     static int tableID;
 
     static ArrayList<String> candidateList;
+
+    static List<Connection> connectionList = Collections.synchronizedList(new ArrayList<Connection>());
 
     public static void main(String args[]) {
         int connectionCount = 0;
@@ -62,7 +68,8 @@ public class TCPServer {
         }
 
         //System.out.printf("election id %d, election name %s, table ID %d, candidates %s\n", electionID, electionName, tableID, candidateList);
-        //TODO: Thread for unlocking a terminal. Only unlock if during election!
+
+        new AdminCommands();
 
 
         try {
@@ -73,7 +80,7 @@ public class TCPServer {
                 Socket clientSocket = listenSocket.accept();
                 System.out.println("CLIENT_SOCKET (created at accept())=" + clientSocket);
                 connectionCount++;
-                new Connection(clientSocket, connectionCount);
+                connectionList.add(new Connection(clientSocket, connectionCount));
             }
         } catch (IOException e) {
             System.out.println("Listen:" + e.getMessage());
@@ -112,9 +119,10 @@ public class TCPServer {
         return fake;
     }
 
-    static boolean checkCC(int cc){
-        //TODO request RMI
-        return true;
+    static String checkCC(int cc){
+        //TODO request RMI, also send election!
+        //return null if not found. Return name otherwise!
+        return "That Guy";
     }
 
     static boolean checkLoginInfo(String username, String password) {
@@ -137,12 +145,12 @@ public class TCPServer {
                 num = Integer.parseInt(aux);
                 return num;
             } catch (NumberFormatException e) {
-                System.out.print("Not a number. Please input a number:\n->");
+                System.out.println("Not a number. Please input a number:");
             }
         }
     }
 
-    private static void enterToContinue() {
+    public static void enterToContinue() {
         System.out.println("Press enter to continue...");
         Scanner sc = new Scanner(System.in);
         sc.nextLine();
@@ -152,22 +160,23 @@ public class TCPServer {
 
 //= Thread para tratar de cada canal de comunica��o com um cliente
 class Connection extends Thread {
+    public int terminalID;
+    public boolean isBlocked;
     private BufferedReader in;
     private PrintWriter out;
     private Socket clientSocket;
-    private int thread_number;
-    private boolean isBlocked;
     private int cc;
     private String name;
 
 
-    public Connection(Socket aClientSocket, int numero) {
-        thread_number = numero;
+    public Connection(Socket aClientSocket, int n) {
+        terminalID = n;
+        isBlocked = true;
         try {
             clientSocket = aClientSocket;
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
-            out.printf("Connection with table %d successful!\n", TCPServer.tableID);
+            out.printf("Connection with table #%d successful! You are voting terminal #%d\n", TCPServer.tableID, terminalID);
             this.start();
         } catch (IOException e) {
             //TODO: handle connection closed
@@ -175,6 +184,7 @@ class Connection extends Thread {
         }
     }
 
+    @Override
     public void run() {
         try {
             while (true) {
@@ -188,12 +198,14 @@ class Connection extends Thread {
     }
 
     private void answerMessage(String s) {
+        //TODO: Make sure everything waits up to 30s!
+
         if (isBlocked) {
-            out.println("Terminal is blocked. Ignoring message");
+            out.println("Terminal is blocked. Message ignored.");
             return;
         }
 
-        //TODO: Block timer.
+        //TODO: Unblock timeout
 
         Message m = new Message(s);
         if (!m.getIsValid()) {
@@ -207,12 +219,19 @@ class Connection extends Thread {
 
                 if (TCPServer.checkLoginInfo(m.getS1(), m.getS2())) {
                     out.println("Login successful.");
+                    int aux = 0;
+                    String result = "";
+                    for (String candidate : TCPServer.candidateList) {
+                        result = String.format("%s\t%d - %s\n", result, aux++, candidate);
+                    }
+                    result = result.concat("Pick your candidate: ");
+                    out.println(result);
                 } else {
                     out.println("Login data was incorrect");
-                    /*Send candidates. they should be cached I guess? TODO*/
                 }
                 break;
             case 1:
+                //TODO
                 if (TCPServer.registerVote()) {
                     out.println("");
                 } else {
@@ -225,16 +244,99 @@ class Connection extends Thread {
         }
     }
 
-    public void blockTerminal() {
+    public boolean blockTerminal() {
         isBlocked = true;
         //TODO clean up stuff like CC and Name. Send message here?
+        return true;
     }
 
-    public void unblockTerminal(int CC) {
+    public boolean unblockTerminal(int voterCC, String voterName) {
         isBlocked = false;
-        //TODO Send message here?
+        cc = voterCC;
+        name = voterName;
+        out.printf("This terminal has been unlocked for %s (CC: %d). Timeout will occur if inactive for 120 seconds\n", name, cc);
+        out.println("Please login");
+        //TODO Still testing this
+        return true;
     }
 
+}
+
+class AdminCommands extends Thread{
+    public AdminCommands() {
+        this.start();
+    }
+
+    @Override
+    public void run() {
+        //TODO: Only allow it if election is in progress
+        while (true){
+            int cc = 0;
+            String name = null;
+            int option = 0;
+
+            System.out.println("=============Voting Table=============\n");
+            while (true) {
+                System.out.println("Insert voter's CC number:");
+                cc = TCPServer.readInt();
+                name = TCPServer.checkCC(cc);
+                if (name!=null) {
+                    System.out.println("Inserted CC number is valid!");
+                    break;
+                } else {
+                    System.out.println("CC not in database.");
+                    TCPServer.enterToContinue();
+                }
+
+            }
+            while (true) {
+                //synchronized to avoid changes while iterating
+                int aux = 0;
+                synchronized (TCPServer.connectionList) {
+                    for (Connection c : TCPServer.connectionList) {
+                        if(c.isBlocked){
+                            System.out.println("\tVoting terminal #" + c.terminalID);
+                            aux++;
+                        } else {
+                            System.out.println("\tVoting terminal #" + c.terminalID + "[IN USE, CAN'T BE PICKED]");
+                        }
+                    }
+                }
+                if(aux == 0){
+                    System.out.println("No voting terminals are available! Operation cancelled.");
+                    break;
+                }
+
+                System.out.println("Pick a terminal to unlock:");
+                //TODO: Protect against terminal getting deleted meanwhile!
+                option = TCPServer.readInt();
+
+                Connection auxC = null;
+                synchronized (TCPServer.connectionList) {
+                    for (Connection c : TCPServer.connectionList) {
+                        if (c.terminalID == option){
+                            if(!c.isBlocked){
+                                break;
+                            }
+                            auxC = c;
+                            break;
+                        }
+                    }
+                }
+                if(auxC == null){
+                    System.out.println("Terminal non-existent or in use.");
+                }
+                else{
+                    if (auxC.unblockTerminal(cc, name)){
+                        System.out.printf("Unblocked terminal %d. Timeout will occur if inactive for 120 seconds\n", auxC.terminalID);
+                        break;
+                    }
+                }
+
+            }
+            TCPServer.enterToContinue();
+        }
+    }
 }
 
 class ArrayListHolder {
