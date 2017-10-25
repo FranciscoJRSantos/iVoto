@@ -24,9 +24,9 @@ public class TCPServer {
         serverPort = c.getTCPPort();
 
 
-        ArrayListHolder temp = requestElectionsList();
-        ArrayList<Integer> electionIDList = temp.electionIDList;
-        ArrayList<String> electionNameList = temp.electionNameList;
+        ArrayList<Object> electionData = requestElectionsList();
+        ArrayList<Integer> electionIDList = (ArrayList<Integer>) electionData.get(0);
+        ArrayList<String> electionNameList = (ArrayList<String>) electionData.get(1);
         //TODO: Receive date. Waiting for data type decision
         while (true) {
             for (int i = 0; i < electionIDList.size(); i++) {
@@ -85,7 +85,7 @@ public class TCPServer {
         }
     }
 
-    private static ArrayListHolder requestElectionsList() {
+    private static ArrayList<Object> requestElectionsList() {
         //TODO request RMI. Provavelmente so eleicoes futuras ou a decorrer?
         ArrayList<Integer> fakeIDAnswer = new ArrayList<>();
         fakeIDAnswer.add(2);
@@ -96,7 +96,11 @@ public class TCPServer {
         fakeElectionAnswer.add("A outra");
         fakeElectionAnswer.add("Ultima");
 
-        return new ArrayListHolder(fakeIDAnswer, fakeElectionAnswer);
+        ArrayList<Object> fakeTuplo = new ArrayList<>();
+        fakeTuplo.add(fakeIDAnswer);
+        fakeTuplo.add(fakeElectionAnswer);
+
+        return fakeTuplo;
     }
 
     private static ArrayList<String> requestCandidatesList() {
@@ -334,15 +338,5 @@ class AdminCommands extends Thread{
             }
             TCPServer.enterToContinue();
         }
-    }
-}
-
-class ArrayListHolder {
-    ArrayList<Integer> electionIDList;
-    ArrayList<String> electionNameList;
-
-    public ArrayListHolder(ArrayList<Integer> electionIDList, ArrayList<String> electionNameList) {
-        this.electionIDList = electionIDList;
-        this.electionNameList = electionNameList;
     }
 }
