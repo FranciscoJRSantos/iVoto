@@ -1,3 +1,8 @@
+/* Código adaptado das seguintes fontes
+    https://www.javatpoint.com/example-to-connect-to-the-mysql-database
+
+*/
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -23,12 +28,12 @@ public class DatabaseConnection{
 
     }
 
-    System.out.println("Oracle JDBC Driver Registered!");
+    System.out.println("MySQL JDBC Driver Registered!");
 
     try {
 
       connection = DriverManager.getConnection(
-          "jdbc:mysql://localhost:1521", "bd",
+          "jdbc:mysql://127.0.0.1:3306/ivotobd", "bd",
           "bd");
 
     } catch (SQLException e) {
@@ -45,4 +50,31 @@ public class DatabaseConnection{
       System.out.println("Failed to make connection!");
     }
   }
+
+    public ArrayList<String> submitQuery(String var1) {
+        System.out.println("Comando sql:" + var1);
+        ArrayList<String> var2 = new ArrayList<String>();
+
+        try {
+            Statement var3 = connection.createStatement();
+            ResultSet var4 = var3.executeQuery(var1);
+            ResultSetMetaData var5 = var4.getMetaData();
+            int var6 = var5.getColumnCount();
+
+            while(var4.next()) {
+                for(int var7 = 0; var7 < var6; ++var7) {
+                    var2.add(var4.getString(var7 + 1));
+                }
+            }
+
+            var4.close();
+            var3.close();
+            return var2;
+        } catch (SQLException var8) {
+            System.out.println(var8);
+            System.out.println("SQLException");
+            return var2;
+        }
+    }
 }
+
