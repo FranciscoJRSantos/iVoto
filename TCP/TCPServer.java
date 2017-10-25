@@ -25,18 +25,17 @@ public class TCPServer {
         ArrayList<Integer> electionIDList = temp.electionIDList;
         ArrayList<String> electionNameList = temp.electionNameList;
         while (true) {
-            for(int i=0; i<electionIDList.size(); i++){
+            for (int i = 0; i < electionIDList.size(); i++) {
                 System.out.printf("\t%d - %s\n", electionIDList.get(i), electionNameList.get(i));
             }
             System.out.println("Pick the election by ID: ");
             choice = readInt();
-            if (electionIDList.contains(choice)){
+            if (electionIDList.contains(choice)) {
                 electionID = choice;
                 electionName = electionNameList.get(electionIDList.indexOf(choice));
                 System.out.printf("Election %d '%s' was successfully picked\n", electionID, electionName);
                 break;
-            }
-            else{
+            } else {
                 System.out.println("There's no such ID!");
                 enterToContinue();
             }
@@ -52,12 +51,11 @@ public class TCPServer {
             }
             System.out.println("Pick the table's number: ");
             choice = readInt();
-            if (tableIDList.contains(choice)){
+            if (tableIDList.contains(choice)) {
                 tableID = choice;
                 System.out.printf("Table #%d was successfully picked\n", tableID);
                 break;
-            }
-            else{
+            } else {
                 System.out.println("There's no such table!");
                 enterToContinue();
             }
@@ -96,22 +94,22 @@ public class TCPServer {
         return new ArrayListHolder(fakeIDAnswer, fakeElectionAnswer);
     }
 
-    private static ArrayList<String> requestCandidatesList(){
+    private static ArrayList<String> requestCandidatesList() {
         //TODO request RMI with electionID (static)
-        ArrayList <String> fake = new ArrayList<>();
+        ArrayList<String> fake = new ArrayList<>();
         fake.add("Lista coiso");
         fake.add("Lista as vezes");
         fake.add("Lista só mais esta");
         return fake;
     }
 
-    private static ArrayList<Integer> requestTableList(){
+    private static ArrayList<Integer> requestTableList() {
         //TODO request RMI with electionID (static)
         ArrayList<Integer> fake = new ArrayList<>();
         fake.add(1);
         fake.add(3);
         fake.add(9);
-        return  fake;
+        return fake;
     }
 
     static boolean checkLoginInfo(String username, String password) {
@@ -124,7 +122,7 @@ public class TCPServer {
         return true;
     }
 
-    public static int readInt(){
+    public static int readInt() {
         Scanner sc = new Scanner(System.in);
         String aux;
         int num;
@@ -139,7 +137,7 @@ public class TCPServer {
         }
     }
 
-    private static void enterToContinue(){
+    private static void enterToContinue() {
         System.out.println("Press enter to continue...");
         Scanner sc = new Scanner(System.in);
         sc.nextLine();
@@ -185,7 +183,7 @@ class Connection extends Thread {
     }
 
     private void answerMessage(String s) {
-        if(isBlocked){
+        if (isBlocked) {
             out.println("Terminal is blocked. Ignoring message");
             return;
         }
@@ -193,28 +191,26 @@ class Connection extends Thread {
         //TODO: Block timer.
 
         Message m = new Message(s);
-        if (!m.getIsValid()){
+        if (!m.getIsValid()) {
             out.println("Message not valid!");
             return;
         }
         //out.printf("type:%d, s3:%s, sList:%s\n", m.getType(), m.getS3(), m.getsList());
 
-        switch (m.getType()){
+        switch (m.getType()) {
             case 0:
 
-                if(TCPServer.checkLoginInfo(m.getS1(), m.getS2())){
+                if (TCPServer.checkLoginInfo(m.getS1(), m.getS2())) {
                     out.println("Login successful.");
-                }
-                else{
+                } else {
                     out.println("Login data was incorrect");
                     /*Send candidates. they should be cached I guess? TODO*/
                 }
                 break;
             case 1:
-                if(TCPServer.registerVote()){
+                if (TCPServer.registerVote()) {
                     out.println("");
-                }
-                else {
+                } else {
 
                 }
                 break;
@@ -224,18 +220,19 @@ class Connection extends Thread {
         }
     }
 
-    public void blockTerminal(){
+    public void blockTerminal() {
         isBlocked = true;
         //TODO clean up stuff like CC and Name. Send message here?
     }
 
-    public void unblockTerminal(int CC){
+    public void unblockTerminal(int CC) {
         isBlocked = false;
         //TODO Send message here?
     }
 
 }
-class ArrayListHolder{
+
+class ArrayListHolder {
     ArrayList<Integer> electionIDList;
     ArrayList<String> electionNameList;
 
