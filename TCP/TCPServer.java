@@ -171,7 +171,7 @@ class Connection extends Thread {
             System.out.println("Connection on place 1: " + e.getMessage());
         }
     }
-    
+
     public void run() {
         try {
             while (true) {
