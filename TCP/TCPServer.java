@@ -1,7 +1,6 @@
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class TCPServer {
@@ -24,6 +23,7 @@ public class TCPServer {
         ArrayListHolder temp = requestElectionsList();
         ArrayList<Integer> electionIDList = temp.electionIDList;
         ArrayList<String> electionNameList = temp.electionNameList;
+        //TODO: Receive date. Waiting for data type decision
         while (true) {
             for (int i = 0; i < electionIDList.size(); i++) {
                 System.out.printf("\t%d - %s\n", electionIDList.get(i), electionNameList.get(i));
@@ -62,7 +62,7 @@ public class TCPServer {
         }
 
         //System.out.printf("election id %d, election name %s, table ID %d, candidates %s\n", electionID, electionName, tableID, candidateList);
-        //TODO: Thread for unlocking a terminal
+        //TODO: Thread for unlocking a terminal. Only unlock if during election!
 
 
         try {
@@ -112,6 +112,11 @@ public class TCPServer {
         return fake;
     }
 
+    static boolean checkCC(int cc){
+        //TODO request RMI
+        return true;
+    }
+
     static boolean checkLoginInfo(String username, String password) {
         //TODO request RMI
         return true;
@@ -158,11 +163,11 @@ class Connection extends Thread {
 
     public Connection(Socket aClientSocket, int numero) {
         thread_number = numero;
-        //TODO: Send connection successful!
         try {
             clientSocket = aClientSocket;
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
+            out.printf("Connection with table %d successful!\n", TCPServer.tableID);
             this.start();
         } catch (IOException e) {
             //TODO: handle connection closed
