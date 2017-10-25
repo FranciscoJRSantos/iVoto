@@ -42,7 +42,7 @@ public class TCPServer {
             }
         }
 
-        requestCandidatesList(); //keeping it cached
+        candidateList = requestCandidatesList(); //keeping it cached
 
         ArrayList<Integer> tableIDList = requestTableList();
 
@@ -63,7 +63,9 @@ public class TCPServer {
             }
         }
 
+        //System.out.printf("election id %d, election name %s, table ID %d, candidates %s\n", electionID, electionName, tableID, candidateList);
         //TODO: Thread for unlocking a terminal
+
 
         try {
             System.out.println("Listening to port" + serverPort);
@@ -94,16 +96,17 @@ public class TCPServer {
         return new ArrayListHolder(fakeIDAnswer, fakeElectionAnswer);
     }
 
-    private static void requestCandidatesList(){
-        //TODO request RMI with electionID (static) and change candidateList (static)
-        candidateList = new ArrayList<>();
-        candidateList.add("Lista coiso");
-        candidateList.add("Lista as vezes");
-        candidateList.add("Lista só mais esta");
+    private static ArrayList<String> requestCandidatesList(){
+        //TODO request RMI with electionID (static)
+        ArrayList <String> fake = new ArrayList<>();
+        fake.add("Lista coiso");
+        fake.add("Lista as vezes");
+        fake.add("Lista só mais esta");
+        return fake;
     }
 
     private static ArrayList<Integer> requestTableList(){
-        //TODO request RMI with electionID (static) and change tableIDList
+        //TODO request RMI with electionID (static)
         ArrayList<Integer> fake = new ArrayList<>();
         fake.add(1);
         fake.add(3);
@@ -157,17 +160,18 @@ class Connection extends Thread {
 
     public Connection(Socket aClientSocket, int numero) {
         thread_number = numero;
+        //TODO: Send connection successful!
         try {
             clientSocket = aClientSocket;
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             this.start();
         } catch (IOException e) {
-            System.out.println("Connection:" + e.getMessage());
+            //TODO: handle connection closed
+            System.out.println("Connection on place 1: " + e.getMessage());
         }
     }
-
-    //=============================
+    
     public void run() {
         try {
             while (true) {
@@ -175,7 +179,8 @@ class Connection extends Thread {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            //TODO: handle connection closed
+            System.out.println("Connection on place 2: " + e.getMessage());
         }
     }
 
