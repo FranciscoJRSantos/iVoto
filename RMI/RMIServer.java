@@ -120,7 +120,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     aux1 = database.submitQuery(sql2);
     System.out.println(aux1);
     String sql3 = "SELECT ID FROM Eleicao WHERE ;";
-    String sql4 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVote) VALUES('" + aux1 + "'" + "," + ",True);";
+    String sql4 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVote) VALUES('" + aux1.get(0) + "'," + eleicao_id + "," + ",True);";
   
   }
 
@@ -245,6 +245,20 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
+  public boolean addDepFac(int faculdade_id, String newName, int flag) throws RemoteException{
+    //add departamento / faculdade. flag 1 - dep, flag 2 - fac 
+    boolean toClient = true;
+    String sql;
+
+    if(flag==1){
+      sql = "INSERT INTO Departamento (name,faculdade_id) VALUES ('" + newName + "','" + faculdade_id+ "';";
+    }
+    else if (flag==2){
+      sql = "INSERT INTO Faculdade (name) VALUES ('"+newName+"';";
+    }
+    database.submitQuery(sql);
+    return toClient;
+  }
 
   class UDPConnection extends Thread {
 

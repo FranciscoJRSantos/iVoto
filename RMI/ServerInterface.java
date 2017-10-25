@@ -4,16 +4,13 @@ import java.sql.Date;
 
 public interface ServerInterface extends Remote{
   // TCP
-
   public boolean checkID(int cc) throws RemoteException;  //recebe numero do CC e verifica se eé um numero constante da base de dados
   public boolean checkLogin(int cc, String username, String password) throws RemoteException;     //recebe CC, username, password, checka se bate certo na base de dados
   public ArrayList<String> listCandidates() throws RemoteException;   //recebe todas as listas candidatas... talvez em vez de "String" precisemos de uma classe "Lista"....
   public void vote(int cc, String choice) throws RemoteException;     //envia voto, talvez nao haja problema ser em String se garantirmos que não há listas com nomes iguais em cada eleição
-
   // Admin Console - todas as boolean retornam true em caso de sucesso e false em caso de insucesso
-
   public boolean addPerson(String name, String Address, int phone, int ccn, int ccv, int dep, String pass, int type) throws RemoteException; //registar pessoa, type 1 - docente, type 2 - funcionario, type 3 - aluno. ccn - numero do cc, ccv - validade do cc
-  public boolean addDepFac(int dep, String newName, int flag) throws RemoteException; //add departamento / faculdade. flag 1 - dep, flag 2 - fac
+  public boolean addDepFac(int faculdade_id, String newName, int flag) throws RemoteException; //add departamento / faculdade. flag 1 - dep, flag 2 - fac
   public boolean rmDepFac(int dep, int flag) throws RemoteException; //remove departamento / faculdade. flag 1 - dep, flag 2 - fac
   public boolean editDepFac(int dep, String newName, int flag) throws RemoteException; //edita nome de departamento / faculdade. flag 1 - dep, flag 2 - fac
   public boolean criaEleiçãoNE(int id, java.sql.Date beginning, java.sql.Date end, String title, String description, int dep) throws RemoteException; //cria eleição Nucleo de estudantes. . As eleições para núcleo de estudantes decorrem num único departamento e podem votar apenas os estudantes desse departamento.
