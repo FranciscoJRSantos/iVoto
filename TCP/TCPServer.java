@@ -1,12 +1,11 @@
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class TCPServer {
-    //TODO: switch to properties
     static int serverPort;
-    static int serverID;
 
     static int electionID;
     static String electionName;
@@ -21,10 +20,10 @@ public class TCPServer {
         TCPConfigLoader c = new TCPConfigLoader();
         serverPort = c.getTCPPort();
 
-        ArrayList<Integer> electionIDList = null;
-        ArrayList<String> electionNameList = null;
-        requestElectionsList(electionIDList, electionNameList);
 
+        ArrayListHolder temp = requestElectionsList();
+        ArrayList<Integer> electionIDList = temp.electionIDList;
+        ArrayList<String> electionNameList = temp.electionNameList;
         while (true) {
             for(int i=0; i<electionIDList.size(); i++){
                 System.out.printf("\t%d - %s\n", electionIDList.get(i), electionNameList.get(i));
@@ -34,7 +33,7 @@ public class TCPServer {
             if (electionIDList.contains(choice)){
                 electionID = choice;
                 electionName = electionNameList.get(electionIDList.indexOf(choice));
-                System.out.printf("Election %d '%s' was successfully picked", electionID, electionName);
+                System.out.printf("Election %d '%s' was successfully picked\n", electionID, electionName);
                 break;
             }
             else{
@@ -43,19 +42,19 @@ public class TCPServer {
             }
         }
 
-        requestCandidatesList(electionID); //keeping it cached
+        requestCandidatesList(); //keeping it cached
 
-        ArrayList<Integer> tableIDList = null;
-        requestTableList(electionID, tableIDList);
+        ArrayList<Integer> tableIDList = requestTableList();
 
         while (true) {
             for (int id : tableIDList) {
-                System.out.println("Table #" + id);
+                System.out.println("\tTable #" + id);
             }
             System.out.println("Pick the table's number: ");
             choice = readInt();
             if (tableIDList.contains(choice)){
                 tableID = choice;
+                System.out.printf("Table #%d was successfully picked\n", tableID);
                 break;
             }
             else{
@@ -63,6 +62,8 @@ public class TCPServer {
                 enterToContinue();
             }
         }
+
+        //TODO: Thread for unlocking a terminal
 
         try {
             System.out.println("Listening to port" + serverPort);
@@ -79,26 +80,44 @@ public class TCPServer {
         }
     }
 
-    private static void requestElectionsList(ArrayList<Integer> electionIDList, ArrayList<String> electionNameList) {
-        //TODO request RMI
-        //get both their IDs and names. Change lists.
+    private static ArrayListHolder requestElectionsList() {
+        //TODO request RMI. Provavelmente so eleicoes futuras ou a decorrer?
+        ArrayList<Integer> fakeIDAnswer = new ArrayList<>();
+        fakeIDAnswer.add(2);
+        fakeIDAnswer.add(5);
+        fakeIDAnswer.add(7);
+        ArrayList<String> fakeElectionAnswer = new ArrayList<>();
+        fakeElectionAnswer.add("Uma");
+        fakeElectionAnswer.add("A outra");
+        fakeElectionAnswer.add("Ultima");
+
+        return new ArrayListHolder(fakeIDAnswer, fakeElectionAnswer);
     }
 
-    private static void requestCandidatesList(int electionID){
-        //TODO request RMI and change candidateList (static)
+    private static void requestCandidatesList(){
+        //TODO request RMI with electionID (static) and change candidateList (static)
+        candidateList = new ArrayList<>();
+        candidateList.add("Lista coiso");
+        candidateList.add("Lista as vezes");
+        candidateList.add("Lista só mais esta");
     }
 
-    private static void requestTableList(int electionID, ArrayList<Integer> tableIDList){
-        //TODO request RMI and change tableIDList
+    private static ArrayList<Integer> requestTableList(){
+        //TODO request RMI with electionID (static) and change tableIDList
+        ArrayList<Integer> fake = new ArrayList<>();
+        fake.add(1);
+        fake.add(3);
+        fake.add(9);
+        return  fake;
     }
 
     static boolean checkLoginInfo(String username, String password) {
-        //TODO
+        //TODO request RMI
         return true;
     }
 
     static boolean registerVote() {
-        //TODO
+        //TODO send to RMI with electionID (static), tableID (static)
         return true;
     }
 
@@ -133,6 +152,7 @@ class Connection extends Thread {
     private int thread_number;
     private boolean isBlocked;
     private int cc;
+    private String name;
 
 
     public Connection(Socket aClientSocket, int numero) {
@@ -201,7 +221,7 @@ class Connection extends Thread {
 
     public void blockTerminal(){
         isBlocked = true;
-        //TODO clean up stuff like CC. Send message here?
+        //TODO clean up stuff like CC and Name. Send message here?
     }
 
     public void unblockTerminal(int CC){
@@ -209,4 +229,13 @@ class Connection extends Thread {
         //TODO Send message here?
     }
 
+}
+class ArrayListHolder{
+    ArrayList<Integer> electionIDList;
+    ArrayList<String> electionNameList;
+
+    public ArrayListHolder(ArrayList<Integer> electionIDList, ArrayList<String> electionNameList) {
+        this.electionIDList = electionIDList;
+        this.electionNameList = electionNameList;
+    }
 }
