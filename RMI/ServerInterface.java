@@ -1,5 +1,6 @@
 import java.rmi.*;
 import java.util.*;
+import java.sql.Date;
 
 public interface ServerInterface extends Remote{
   // TCP
@@ -15,10 +16,10 @@ public interface ServerInterface extends Remote{
   public boolean addDepFac(int dep, String newName, int flag) throws RemoteException; //add departamento / faculdade. flag 1 - dep, flag 2 - fac
   public boolean rmDepFac(int dep, int flag) throws RemoteException; //remove departamento / faculdade. flag 1 - dep, flag 2 - fac
   public boolean editDepFac(int dep, String newName, int flag) throws RemoteException; //edita nome de departamento / faculdade. flag 1 - dep, flag 2 - fac
-  public boolean criaEleiçãoNE(int id, Date beginning, Date end, String title, String description, int dep) throws RemoteException; //cria eleição Nucleo de estudantes. . As eleições para núcleo de estudantes decorrem num único departamento e podem votar apenas os estudantes desse departamento.
-  public boolean criaEleiçãoCG(int id, Date beginning, Date end, String title, String description) throws RemoteException; // os estudantes votam apenas nas listas de estudantes, os docentes votam apenas nas listas de docentes, e os funcionários votam apenas nas listas de funcionários.
-  public boolean criaEleiçãoDD(int id, Date beginning, Date end, String title, String description, int idDep) throws RemoteException; //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
-  public boolean criaEleiçãoDF(int id, Date beginning, Date end, String title, String description, int idFac) throws RemoteException; //cria eleição para a direção da faculdade, cria eleição para a direção do departamento
+  public boolean criaEleiçãoNE(int id, java.sql.Date beginning, java.sql.Date end, String title, String description, int dep) throws RemoteException; //cria eleição Nucleo de estudantes. . As eleições para núcleo de estudantes decorrem num único departamento e podem votar apenas os estudantes desse departamento.
+  public boolean criaEleiçãoCG(int id, java.sql.Date beginning, java.sql.Date end, String title, String description) throws RemoteException; // os estudantes votam apenas nas listas de estudantes, os docentes votam apenas nas listas de docentes, e os funcionários votam apenas nas listas de funcionários.
+  public boolean criaEleiçãoDD(int id, java.sql.Date beginning, java.sql.Date end, String title, String description, int idDep) throws RemoteException; //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
+  public boolean criaEleiçãoDF(int id, java.sql.Date beginning, java.sql.Date end, String title, String description, int idFac) throws RemoteException; //cria eleição para a direção da faculdade, cria eleição para a direção do departamento
   public boolean manageList(int idElec, String List, int flag) throws RemoteException; //flag 1 - add list, flag 2 - remove list
   public ArrayList<String> viewListsFromElection(int id) throws RemoteException; //recebe id da eleição e mostra as listas disponiveis
   public ArrayList<String> viewCurrentElections() throws RemoteException; //mostra todas as eleições a decorrer ou futuras
@@ -32,4 +33,6 @@ public interface ServerInterface extends Remote{
   public boolean editPerson(int idUser, String newInfo, int flag) throws RemoteException; //edita a info de uma pessoa, manda a newinfo sempre como string e depois cabe ao server passar de string para int caso seja necessario. flag 1 - name, flag 2 - Address, flag 3 - phone, flag 4 - ccn, flag 5 - ccv, flag 6 - dep, flag 7 - pass
   public ArrayList<String> tableMembers(int idTable) throws RemoteException; //retorna a lista de pessoas que estão na mesa
   public boolean manageTable(int idTable, int idUser, int idNewUser) throws RemoteException; //mudar a pessoa que está na mesa 
+  public ArrayList<String> verFaculdades() throws RemoteException;
+  public ArrayList<String> verDepartamentos() throws RemoteException;
 }
