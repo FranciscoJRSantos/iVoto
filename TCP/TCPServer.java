@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TCPServer {
     static int serverPort;
@@ -15,7 +16,7 @@ public class TCPServer {
 
     static ArrayList<String> candidateList;
 
-    static List<Connection> connectionList = Collections.synchronizedList(new ArrayList<Connection>());
+    static final List<Connection> connectionList = Collections.synchronizedList(new ArrayList<Connection>());
 
     public static void main(String args[]) {
         int connectionCount = 0;
@@ -45,8 +46,6 @@ public class TCPServer {
             }
         }
 
-        candidateList = requestCandidatesList(); //keeping it cached
-
         ArrayList<Integer> tableIDList = requestTableList();
 
         while (true) {
@@ -65,7 +64,9 @@ public class TCPServer {
             }
         }
 
-        //System.out.printf("election id %d, election name %s, table ID %d, candidates %s\n", electionID, electionName, tableID, candidateList);
+        //TODO: This should only be requested right when the election starts!
+        //Maybe have a thread waiting for the start, changing a boolean to true and caching the list.
+        candidateList = requestCandidatesList(); //keeping it cached
 
         new AdminCommands();
 
@@ -121,7 +122,7 @@ public class TCPServer {
         return fake;
     }
 
-    static String checkCC(int cc){
+    static String checkCC(int cc) {
         //TODO request RMI, also send election!
         //return null if not found. Return name otherwise!
         return "That Guy";
@@ -163,26 +164,28 @@ public class TCPServer {
 //= Thread para tratar de cada canal de comunica��o com um cliente
 class Connection extends Thread {
     public int terminalID;
-    public boolean isBlocked;
     private BufferedReader in;
-    private PrintWriter out;
-    private Socket clientSocket;
+    public PrintWriter out;
     private int cc;
     private String name;
+    public boolean isBlocked;
+    private boolean isLogged;
+    public final AtomicBoolean recentActivity = new AtomicBoolean(false);
+    private TimeoutTimer timer = null;
 
 
-    public Connection(Socket aClientSocket, int n) {
+    Connection(Socket aClientSocket, int n) {
         terminalID = n;
         isBlocked = true;
+        isLogged = false;
         try {
-            clientSocket = aClientSocket;
+            Socket clientSocket = aClientSocket;
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             out.printf("Connection with table #%d successful! You are voting terminal #%d\n", TCPServer.tableID, terminalID);
             this.start();
         } catch (IOException e) {
-            //TODO: handle connection closed
-            System.out.println("Connection on place 1: " + e.getMessage());
+            endConnection();
         }
     }
 
@@ -194,8 +197,7 @@ class Connection extends Thread {
             }
 
         } catch (IOException e) {
-            //TODO: handle connection closed
-            System.out.println("Connection on place 2: " + e.getMessage());
+            endConnection();
         }
     }
 
@@ -207,7 +209,10 @@ class Connection extends Thread {
             return;
         }
 
-        //TODO: Unblock timeout
+        synchronized (recentActivity) {
+            recentActivity.set(true);
+            recentActivity.notify();
+        }
 
         Message m = new Message(s);
         if (!m.getIsValid()) {
@@ -233,12 +238,13 @@ class Connection extends Thread {
                 }
                 break;
             case 1:
-                //TODO
-                if (TCPServer.registerVote()) {
-                    out.println("");
-                } else {
-
+                if (!isLogged) {
+                    out.println("You can't vote yet! Login first.");
+                    break;
                 }
+
+                //TODO: Make sure it returns to blocked after vote
+                //TODO: Send vote, allow for null our white votes
                 break;
             default:
                 out.println("Type non-existent!");
@@ -246,33 +252,89 @@ class Connection extends Thread {
         }
     }
 
-    public boolean blockTerminal() {
+    public synchronized boolean blockTerminal() {
         isBlocked = true;
-        //TODO clean up stuff like CC and Name. Send message here?
-        return true;
-    }
-
-    public boolean unblockTerminal(int voterCC, String voterName) {
-        isBlocked = false;
-        cc = voterCC;
-        name = voterName;
-        out.printf("This terminal has been unlocked for %s (CC: %d). Timeout will occur if inactive for 120 seconds\n", name, cc);
-        out.println("Please login");
+        isLogged = false;
+        cc = 0;
+        name = null;
+        recentActivity.set(false);
+        timer.interrupt();
+        System.out.printf("[STATUS] Terminal #%d was blocked.\n", terminalID);
+        out.println("This terminal has been blocked.");
         //TODO Still testing this
         return true;
     }
 
+    public synchronized boolean unblockTerminal(int voterCC, String voterName) {
+        isBlocked = false;
+        cc = voterCC;
+        name = voterName;
+        recentActivity.set(false);
+        timer = new TimeoutTimer(this);
+        System.out.printf("Unblocked terminal #%d. Timeout will occur if inactive for 120 seconds\n", terminalID);
+        out.printf("This terminal has been unlocked for %s (CC: %d). Timeout will occur if inactive for 120 seconds\nPlease login:\n", name, cc);
+        //TODO Still testing this
+        return true;
+    }
+
+    private void endConnection() {
+        synchronized (TCPServer.connectionList) {
+            TCPServer.connectionList.remove(this);
+        }
+        if(timer!=null) timer.interrupt();
+        System.out.printf("[Warning] Connection with terminal #%d was closed. Removed from the list of terminals\n", terminalID);
+    }
+
 }
 
-class AdminCommands extends Thread{
-    public AdminCommands() {
+class TimeoutTimer extends Thread {
+    //120 seconds = 120000 ms
+    private static final int TIMEOUT_VALUE = 12000;
+    Connection parent;
+
+    TimeoutTimer(Connection connection) {
+        parent = connection;
+        this.start();
+    }
+
+    @Override
+    public void run() {
+        long endTime = System.currentTimeMillis() + TIMEOUT_VALUE;
+        long timeRemaining;
+        synchronized (parent.recentActivity) {
+            while (true) {
+                timeRemaining = TIMEOUT_VALUE;
+                //Protecting for spurious wakeups
+                while (timeRemaining > 0 && !parent.recentActivity.get()) {
+                    try {
+                        parent.recentActivity.wait(timeRemaining);
+                        timeRemaining = endTime - System.currentTimeMillis();
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                }
+                //if it reaches here we're sure TIMEOUT_VALUE milliseconds have passed or there has been recent activity
+                if (parent.recentActivity.get()) {
+                    parent.recentActivity.set(false);
+                    parent.out.println("[TIMER] Activity detected, timeout timer reset to 120 seconds.");
+                } else {
+                    parent.blockTerminal();
+                    return;
+                }
+            }
+        }
+    }
+}
+
+class AdminCommands extends Thread {
+    AdminCommands() {
         this.start();
     }
 
     @Override
     public void run() {
         //TODO: Only allow it if election is in progress
-        while (true){
+        while (true) {
             int cc = 0;
             String name = null;
             int option = 0;
@@ -282,11 +344,11 @@ class AdminCommands extends Thread{
                 System.out.println("Insert voter's CC number:");
                 cc = TCPServer.readInt();
                 name = TCPServer.checkCC(cc);
-                if (name!=null) {
-                    System.out.println("Inserted CC number is valid!");
+                if (name != null) {
+                    System.out.println("Inserted CC number is valid and can vote in this election!");
                     break;
                 } else {
-                    System.out.println("CC not in database.");
+                    System.out.println("CC not in database or not allowed to vote in this election.");
                     TCPServer.enterToContinue();
                 }
 
@@ -296,7 +358,7 @@ class AdminCommands extends Thread{
                 int aux = 0;
                 synchronized (TCPServer.connectionList) {
                     for (Connection c : TCPServer.connectionList) {
-                        if(c.isBlocked){
+                        if (c.isBlocked) {
                             System.out.println("\tVoting terminal #" + c.terminalID);
                             aux++;
                         } else {
@@ -304,20 +366,19 @@ class AdminCommands extends Thread{
                         }
                     }
                 }
-                if(aux == 0){
+                if (aux == 0) {
                     System.out.println("No voting terminals are available! Operation cancelled.");
                     break;
                 }
 
                 System.out.println("Pick a terminal to unlock:");
-                //TODO: Protect against terminal getting deleted meanwhile!
                 option = TCPServer.readInt();
 
                 Connection auxC = null;
                 synchronized (TCPServer.connectionList) {
                     for (Connection c : TCPServer.connectionList) {
-                        if (c.terminalID == option){
-                            if(!c.isBlocked){
+                        if (c.terminalID == option) {
+                            if (!c.isBlocked) {
                                 break;
                             }
                             auxC = c;
@@ -325,14 +386,11 @@ class AdminCommands extends Thread{
                         }
                     }
                 }
-                if(auxC == null){
+                if (auxC == null) {
                     System.out.println("Terminal non-existent or in use.");
-                }
-                else{
-                    if (auxC.unblockTerminal(cc, name)){
-                        System.out.printf("Unblocked terminal %d. Timeout will occur if inactive for 120 seconds\n", auxC.terminalID);
-                        break;
-                    }
+                } else {
+                    auxC.unblockTerminal(cc, name);
+                    break;
                 }
 
             }
