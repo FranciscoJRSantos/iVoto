@@ -4,7 +4,7 @@ import java.sql.Date;
 
 public interface ServerInterface extends Remote{
   // TCP
-  public boolean checkID(int cc, int eleicao_id) throws RemoteException;  //recebe numero do CC e verifica se eé um numero constante da base de dados
+  public String checkID(int cc, int eleicao_id) throws RemoteException;
   public boolean checkLogin(int cc, String username, String password) throws RemoteException;     //recebe CC, username, password, checka se bate certo na base de dados
   public ArrayList<String> listCandidates() throws RemoteException;   //recebe todas as listas candidatas... talvez em vez de "String" precisemos de uma classe "Lista"....
   public boolean vote(int cc, String lista, int eleicao_id) throws RemoteException;
@@ -22,7 +22,7 @@ public interface ServerInterface extends Remote{
   public ArrayList<String> viewListsFromElection(int id) throws RemoteException; //recebe id da eleição e mostra as listas disponiveis
   public ArrayList<ArrayList<String>> viewCurrentElections() throws RemoteException; //mostra todas as eleições a decorrer ou futuras
   public boolean changeElectionsText(int id, String text, int flag) throws RemoteException; //Muda titulo ou descriçao de uma eleiçao. flag 1 - titulo, flag 2 - descrição
-  public boolean changeElectionsDates(int id, Date newdate, int flag) throws RemoteException; //Muda a hora de uma eleiçao. flag 1 - inicio, flag 2 - fim
+  public boolean changeElectionsDates(int id, java.sql.Date newdate, int flag) throws RemoteException; //Muda a hora de uma eleiçao. flag 1 - inicio, flag 2 - fim
   public int checkTable(int idUser, int idElec) throws RemoteException; //saber onde uma pessoa votou, retorna -1 em caso de insucesso
   public java.util.Date showHour(int idUser, int idElec) throws RemoteException; //saber quando uma pessoa votou, retorna algo que indique erro :) nao sei :) fds :)
   public int TableInfo(int idTable, int idElec) throws RemoteException; //realtime info sobre o estado das mesas (return -1) if down, e numero de votos feitos naquela mesa (return n)
