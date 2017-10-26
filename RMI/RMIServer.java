@@ -11,6 +11,7 @@ import java.rmi.registry.Registry;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
+import java.text.SimpleDateFormat;
 
 public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
@@ -78,7 +79,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   // TCP Methods
 
   public boolean checkID(int cc) throws RemoteException {
-    
+
     boolean toClient = true;
     ArrayList<String> aux;
     String sql = "SELECT numeroCC FROM User WHERE numeroCC='" + cc + "'";
@@ -86,7 +87,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     if (aux.isEmpty()){
       toClient = false;
     }
-  
+
     return toClient;
   }
 
@@ -98,20 +99,20 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     if(aux.isEmpty()){
       toClient = false;
     }
-  
+
     return toClient;
   }
 
   public ArrayList<String>  listCandidates(int mesavoto_id) throws RemoteException{
-    
+
     String sql = "SELECT NAME FROM Lista WHERE mesavoto_id='" + mesavoto_id + "';";
 
     return database.submitQuery(sql);
-  
+
   }
 
   public void vote(int cc, String lista, int eleicao_id) throws RemoteException{
-  
+
     // FINNISH THISSSSSSSSSSSSSSSSSSSSSSSSSSSSSS 
     ArrayList<String> aux1;
     String sql1 = "UPDATE Lista SET votos = votos +1 WHERE name='" + lista + "';";
@@ -121,33 +122,33 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     System.out.println(aux1);
     String sql3 = "SELECT ID FROM Eleicao WHERE ;";
     String sql4 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVote) VALUES('" + aux1.get(0) + "'," + eleicao_id + "," + ",True);";
-  
+
   }
 
   // Admin Console
-  
+
   public boolean addPerson(String name, String Address, int phone, int ccn, int ccv, int dep, int fac, String pass, int type) throws RemoteException{
-    
+
     boolean toClient = true;
-    
+
     String sql = "INSERT INTO User (name,hashed_password,contacto,morada,numeroCC,validadeCC,role,departamento_id,faculdade_id) VALUES('" + name + "','" + pass +"','"+ phone+"','"+Address+"','"+ccn+"','"+ccv+"','"+type+"','"+dep+"','"+fac+");";
 
     database.submitQuery(sql);
-    
+
     return toClient;
   }
 
   public ArrayList<String> tableMembers(int idTable) throws RemoteException{
-  
+
     ArrayList<String> aux;
     String sql = "SELECT name FROM User WHERE mesavoto_id'" + idTable + "';";
-    
+
     aux = database.submitQuery(sql);
     return aux;
   }
-  
+
   public int checkTable(int idUser, int idElec) throws RemoteException{
-    
+
     int mesa;
     ArrayList<String> aux;
 
@@ -163,49 +164,49 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return mesa;
 
   } 
-  
+
   public ArrayList<String> viewCurrentElections() throws RemoteException{
-    
+
     ArrayList<String> aux1;
     String sql1 = "SELECT ID AND titulo FROM Eleicao";
     return database.submitQuery(sql1);
   }
 
   public ArrayList<String> verDepartamentos() throws RemoteException{
-  
+
     String sql1 = "SELECT ID AND nome FROM Departamento;";
     return database.submitQuery(sql1);
   }
 
   public ArrayList<String> verFaculdades() throws RemoteException{
-  
+
     String sql1 = "SELECT ID AND nome FROM Faculdade;";
     return database.submitQuery(sql1);
 
   }
 
   public boolean rmDepFac(int dep, int flag) throws RemoteException{
-    
+
     boolean toClient = true;
     String sql;
 
     if (flag == 1){
-        sql = "DELETE FROM Departamento WHERE ID='" + dep + "';";
+      sql = "DELETE FROM Departamento WHERE ID='" + dep + "';";
     }
     else if(flag ==2){
-        sql = "DELETE FROM Faculdade WHERE ID='" + dep + "';";
+      sql = "DELETE FROM Faculdade WHERE ID='" + dep + "';";
     }
     database.submitQuery(sql);
 
     return toClient;
-  
+
   }
 
   public ArrayList<String> viewListsFromElection(int id) throws RemoteException{
-  
+
     ArrayList<String> toClient;
     String sql = "SELECT Lista WHERE eleicao_id='" + id + "';";
-    
+
     toClient = database.submitQuery(sql);
     return toClient;
   }
@@ -228,14 +229,14 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   } 
 
   public boolean changeElectionsText(int id, String text, int flag) throws RemoteException{
-   //Muda titulo ou descriçao de uma eleiçao. flag 1 - titulo, flag 2 - descrição
+    //Muda titulo ou descriçao de uma eleiçao. flag 1 - titulo, flag 2 - descrição
     boolean toClient = true;
     String sql;
 
     if (flag == 1){
       sql = "UPDATE Eleicao WHERE id='" + id +"' SET titulo='" + text + "';";
       database.submitQuery(sql);
-    
+
     }
     else if (flag == 2){
       sql = "UPDATE Eleicao WHERE id='" + id +"' SET descrição='" + text + "';";
@@ -259,6 +260,98 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     database.submitQuery(sql);
     return toClient;
   }
+
+  public boolean manageTable(int idTable, int idUser, int idNewUser) throws RemoteException{
+
+    //mudar a pessoa que está na mesa 
+
+    boolean toClient = true;
+    String sql = "UPDATE User WHERE mesavoto_id='" + idTable + "SET mesavoto_id = NULL;";
+    database.submitQuery(sql);
+    sql = "UPDATE User WHERE ID='" + idNewUser + "' SET mesavoto_id='" + idTable + "';";
+    database.submitQuery(sql);
+
+    return toClient;
+  }
+
+  public boolean editPerson(int idUser, String newInfo, int flag) throws RemoteException{
+    //edita a info de uma pessoa, manda a newinfo sempre como string e depois cabe ao server passar de string para int caso seja necessario. flag 1 - name, flag 2 - Address, flag 3 - phone, flag 4 - ccn, flag 5 - ccv, flag 6 - dep, flag 7 - pass
+
+    int aux;
+    String sql;
+
+    switch (flag){
+      case 1:
+        sql = "UPDATE User WHERE ID='" + idUser + "' SET name='" + newInfo + "';";
+        break;
+      case 2:
+        sql = "UPDATE User WHERE ID='" + idUser + "' SET morada='" + newInfo + "';";
+        break;
+      case 3:
+        aux = Integer.parseInt(newInfo);
+        sql = "UPDATE User WHERE ID='" + idUser + "' SET contacto='" + aux + "';";
+        break;
+      case 4:
+        aux = Integer.parseInt(newInfo);
+        sql = "UPDATE User WHERE ID='" + idUser + "' SET numeroCC='" + aux + "';";
+        break;
+      case 5:
+        break;
+      case 6:
+        aux = Integer.parseInt(newInfo);
+        sql = "UPDATE User WHERE ID='" + idUser + "' SET departamento_id='" + aux + "';";
+        break;
+      case 7:
+        sql = "UPDATE User WHERE ID='" + idUser + "' SET hashed_password='" + aux + "';";
+        break;
+      default:
+        break;
+
+    }
+    database.submitQuery(sql); 
+    return true;
+  }   
+
+  public boolean anticipatedVote(int idElec, int idUser, int vote, String pass) throws RemoteException{
+    //vote antecipado. o int vote é um int da lista de listas disponiveis retornada pela "viewListsFromElection"
+
+  } 
+
+  public ArrayList<String> checkResults(int idElec) throws RemoteException{
+    //recebe uma lista com [[lista,nº de votos],...]. return [[null,null]] em caso de insucesso
+    ArrayList<String> aux;
+    String sql = "SELECT nome,votos FROM Lista WHERE eleicao_id='" + idElec +"';";
+
+    return database.submitQuery(sql);
+  }
+
+  public int TableInfo(int idTable, int idElec) throws RemoteException{
+    //realtime info sobre o estado das mesas (return -1) if down, e numero de votos feitos naquela mesa (return n)
+    int nVotos;
+    ArrayList<String> aux;
+    String sql = "SELECT numeroVotos FROM MesaVoto WHERE ID='" + idTable + "' AND eleicao_id='" + idElec + "' AND active=True;";
+    aux = database.submitQuery(sql);
+    if (aux.isEmpty()){
+      nVotos = -1;
+    }
+    else {
+      nVotos = Integer.parseInt(aux.get(0));
+    }
+
+    return nVotos;
+  }
+
+  public Date checkHour(int idUser, int idElec) throws RemoteException{
+    SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
+    Date toClient;
+    ArrayList<String> aux;
+    String sql = "SELECT whenVoted FROM User_Eleicao WHERE user_id='" + idUser + "' AND eleicao_id='" + idElec + "';";
+    aux = database.submitQuery(sql);
+    toClient =  (Date) formatter.parse(aux.get(0));
+
+    return toClient;
+
+  } //saber quando uma pessoa votou, retorna algo que indique erro :) nao sei :) fds :)
 
   class UDPConnection extends Thread {
 
