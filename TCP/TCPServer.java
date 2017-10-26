@@ -134,9 +134,10 @@ public class TCPServer {
         return true;
     }
 
-    static boolean registerVote() {
-        //TODO send to RMI with electionID (static), tableID (static)
-        return true;
+    static String registerVote(int cc, String s1) {
+        //TODO send to RMI along with electionID (static), tableID (static)
+        //receive voted list (name, null or white)
+        return "fake";
     }
 
     public static int readInt() {
@@ -224,7 +225,6 @@ class Connection extends Thread {
 
         switch (m.getType()) {
             case 0:
-
                 if (TCPServer.checkLoginInfo(m.getS1(), m.getS2())) {
                     out.println("Login successful.");
                     int aux = 0;
@@ -243,9 +243,16 @@ class Connection extends Thread {
                     out.println("You can't vote yet! Login first.");
                     break;
                 }
-
-                //TODO: Make sure it returns to blocked after vote
                 //TODO: Send vote, allow for null our white votes
+                String aux = TCPServer.registerVote(cc, m.getS1());
+                if (aux != null){
+                    out.printf("Vote for candidate %s registered successfully.\n", aux);
+                    blockTerminal();
+                }
+                else {
+                    out.println("An error happened while voting. Please vote again.");
+                    break;
+                }
                 break;
             default:
                 out.println("Type non-existent!");
@@ -282,7 +289,7 @@ class Connection extends Thread {
         synchronized (TCPServer.connectionList) {
             TCPServer.connectionList.remove(this);
         }
-        if(timer!=null) timer.interrupt();
+        if (timer != null) timer.interrupt();
         System.out.printf("[Warning] Connection with terminal #%d was closed. Removed from the list of terminals\n", terminalID);
     }
 
@@ -381,9 +388,7 @@ class AdminCommands extends Thread {
                 synchronized (TCPServer.connectionList) {
                     for (Connection c : TCPServer.connectionList) {
                         if (c.terminalID == option) {
-                            if (!c.isBlocked) {
-                                break;
-                            }
+                            if (!c.isBlocked) break;
                             auxC = c;
                             break;
                         }
