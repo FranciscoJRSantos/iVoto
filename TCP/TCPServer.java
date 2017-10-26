@@ -66,6 +66,7 @@ public class TCPServer {
 
         //TODO: This should only be requested right when the election starts!
         //Maybe have a thread waiting for the start, changing a boolean to true and caching the list.
+        //Same as in unblocking in Admin Commands
         candidateList = requestCandidatesList(); //keeping it cached
 
         new AdminCommands();
@@ -333,7 +334,9 @@ class AdminCommands extends Thread {
 
     @Override
     public void run() {
-        //TODO: Only allow it if election is in progress
+        //TODO: Only allow unblocking if election is in progress!
+        //Maybe a thread?
+
         while (true) {
             int cc = 0;
             String name = null;
