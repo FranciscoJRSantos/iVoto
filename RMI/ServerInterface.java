@@ -4,10 +4,11 @@ import java.sql.Date;
 
 public interface ServerInterface extends Remote{
   // TCP
-  public boolean checkID(int cc) throws RemoteException;  //recebe numero do CC e verifica se eé um numero constante da base de dados
+  public boolean checkID(int cc, int eleicao_id) throws RemoteException;  //recebe numero do CC e verifica se eé um numero constante da base de dados
   public boolean checkLogin(int cc, String username, String password) throws RemoteException;     //recebe CC, username, password, checka se bate certo na base de dados
   public ArrayList<String> listCandidates() throws RemoteException;   //recebe todas as listas candidatas... talvez em vez de "String" precisemos de uma classe "Lista"....
-  public void vote(int cc, String choice) throws RemoteException;     //envia voto, talvez nao haja problema ser em String se garantirmos que não há listas com nomes iguais em cada eleição
+  public boolean vote(int cc, String lista, int eleicao_id) throws RemoteException;
+
   // Admin Console - todas as boolean retornam true em caso de sucesso e false em caso de insucesso
   public boolean addPerson(String name, String Address, int phone, int ccn, int ccv, int dep, String pass, int type) throws RemoteException; //registar pessoa, type 1 - docente, type 2 - funcionario, type 3 - aluno. ccn - numero do cc, ccv - validade do cc
   public boolean addDepFac(int faculdade_id, String newName, int flag) throws RemoteException; //add departamento / faculdade. flag 1 - dep, flag 2 - fac
@@ -19,11 +20,11 @@ public interface ServerInterface extends Remote{
   public boolean criaEleiçãoDF(int id, java.sql.Date beginning, java.sql.Date end, String title, String description, int idFac) throws RemoteException; //cria eleição para a direção da faculdade, cria eleição para a direção do departamento
   public boolean manageList(int idElec, String List, int flag) throws RemoteException; //flag 1 - add list, flag 2 - remove list
   public ArrayList<String> viewListsFromElection(int id) throws RemoteException; //recebe id da eleição e mostra as listas disponiveis
-  public ArrayList<String> viewCurrentElections() throws RemoteException; //mostra todas as eleições a decorrer ou futuras
+  public ArrayList<ArrayList<String>> viewCurrentElections() throws RemoteException; //mostra todas as eleições a decorrer ou futuras
   public boolean changeElectionsText(int id, String text, int flag) throws RemoteException; //Muda titulo ou descriçao de uma eleiçao. flag 1 - titulo, flag 2 - descrição
   public boolean changeElectionsDates(int id, Date newdate, int flag) throws RemoteException; //Muda a hora de uma eleiçao. flag 1 - inicio, flag 2 - fim
   public int checkTable(int idUser, int idElec) throws RemoteException; //saber onde uma pessoa votou, retorna -1 em caso de insucesso
-  public Date checkHour(int idUser, int idElec) throws RemoteException; //saber quando uma pessoa votou, retorna algo que indique erro :) nao sei :) fds :)
+  public java.util.Date showHour(int idUser, int idElec) throws RemoteException; //saber quando uma pessoa votou, retorna algo que indique erro :) nao sei :) fds :)
   public int TableInfo(int idTable, int idElec) throws RemoteException; //realtime info sobre o estado das mesas (return -1) if down, e numero de votos feitos naquela mesa (return n)
   public ArrayList<String> checkResults(int idElec) throws RemoteException; //recebe uma lista com [[lista,nº de votos],...]. return [[null,null]] em caso de insucesso
   public boolean anticipatedVote(int idElec, int idUser, int vote, String pass) throws RemoteException; //vote antecipado. o int vote é um int da lista de listas disponiveis retornada pela "viewListsFromElection"

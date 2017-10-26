@@ -111,17 +111,27 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
-  public void vote(int cc, String lista, int eleicao_id) throws RemoteException{
+  public boolean vote(int cc, String lista, int eleicao_id) throws RemoteException{
 
     // FINNISH THISSSSSSSSSSSSSSSSSSSSSSSSSSSSSS 
+    boolean toClient = true;
     ArrayList<String> aux1;
+    ArrayList<String> aux2;
     String sql1 = "UPDATE Lista SET votos = votos +1 WHERE name='" + lista + "';";
     database.submitQuery(sql1);
     String sql2 = "SELECT ID FROM User WHERE numeroCC='" + cc + "';";
     aux1 = database.submitQuery(sql2);
     System.out.println(aux1);
     String sql3 = "SELECT ID FROM Eleicao WHERE ;";
-    String sql4 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVote) VALUES('" + aux1.get(0) + "'," + eleicao_id + "," + ",True);";
+    String sql4 = "SELECT hasVoted FROM User_Eleicao WHERE user_id='" + aux1.get(0) + "' AND eleicao_id='" +  eleicao_id + "';";
+    aux2 = database.submitQuery(sql4);
+    if (aux2.isEmpty()){
+      String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted) VALUES('" + aux1.get(0) + "'," + eleicao_id + "," + ",True);";
+      database.submitQuery(sql5);
+    }
+    else{
+
+    }
 
   }
 
@@ -165,11 +175,28 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   } 
 
-  public ArrayList<String> viewCurrentElections() throws RemoteException{
+  public ArrayList<ArrayList<String>> viewCurrentElections() throws RemoteException{
 
-    ArrayList<String> aux1;
-    String sql1 = "SELECT ID AND titulo FROM Eleicao";
-    return database.submitQuery(sql1);
+    ArrayList<ArrayList<String>> container = new ArrayList<>();
+    ArrayList<String> ID;
+    ArrayList<String> titulos;
+    ArrayList<String> dateInicio;
+    ArrayList<String> dateFim;
+    String sql1 = "SELECT ID FROM Eleicao;";
+    ID = database.submitQuery(sql1);
+    sql1 = "SELECT titulo FROM Eleicao;";
+    titulos = database.submitQuery(sql1);
+    sql1 = "SELECT inicio FROM Eleicao;";
+    dateInicio = database.submitQuery(sql1);
+    sql1 = "SELECT fim FROM Eleicao;";
+    dateFim = database.submitQuery(sql1);
+
+    container.add(ID);
+    container.add(titulos);
+    container.add(dateInicio);
+    container.add(dateFim);
+
+    return container;
   }
 
   public ArrayList<String> verDepartamentos() throws RemoteException{
@@ -341,7 +368,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return nVotos;
   }
 
-  public Date checkHour(int idUser, int idElec) throws RemoteException{
+  public java.util.Date showHour(int idUser, int idElec) throws RemoteException{ 
     SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
     Date toClient;
     ArrayList<String> aux;
@@ -350,8 +377,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     toClient =  (Date) formatter.parse(aux.get(0));
 
     return toClient;
-
   } //saber quando uma pessoa votou, retorna algo que indique erro :) nao sei :) fds :)
+
 
   class UDPConnection extends Thread {
 
