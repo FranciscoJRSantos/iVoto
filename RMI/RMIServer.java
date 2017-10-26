@@ -470,11 +470,82 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
-  public boolean criaEleiçãoDF(int id, java.sql.Date beginning, java.sql.Date end, String title, String description, int idFac) throws RemoteException{
-    //cria eleição para a direção da faculdade, cria eleição para a direção do departamento
-  
+  public boolean editDepFac(int dep, String newName, int flag) throws RemoteException{
+
+    //edita nome de departamento / faculdade. flag 1 - dep, flag 2 - fac
+    String sql1;
+    
+  }
+
+  public boolean criaEleiçãoNE(java.sql.Date beginning, java.sql.Date end, String title, String description, int dep) throws RemoteException{
+
+    //cria eleição Nucleo de estudantes. . As eleições para núcleo de estudantes decorrem num único departamento e podem votar apenas os estudantes desse departamento.
+    int eleicao_id;
+    ArrayList<String> needed;
+    String sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',1);";
+    database.submitQuery(sql1);
+
+    String aux = "SELECT LAST_INSERT_ID();";
+    needed = database.submitQuery(aux);
+    eleicao_id = Integer.parseInt(needed.get(0));
+
+    String sql2 = "INSERT INTO Departamento_Eleicao (faculdade_id, eleicao_id) VALUES (' " + dep + ",'" + eleicao_id + "');";
+    database.submitQuery(sql1);
+    database.submitQuery(sql2);
+
+    return true;
 
   }
+
+  public boolean criaEleiçãoCG(java.sql.Date beginning, java.sql.Date end, String title, String description) throws RemoteException{
+
+    // os estudantes votam apenas nas listas de estudantes, os docentes votam apenas nas listas de docentes, e os funcionários votam apenas nas listas de funcionários.
+    String sql1;
+    sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',2);";
+    database.submitQuery(sql1);
+    sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',3);";
+    database.submitQuery(sql1);
+    sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',4);";
+    database.submitQuery(sql1);
+
+    return true;
+
+  }
+
+  public boolean criaEleiçãoDF(java.sql.Date beginning, java.sql.Date end, String title, String description, int idFac) throws RemoteException{
+    //cria eleição para a direção da faculdade
+    int eleicao_id;
+    ArrayList<String> needed;
+    String sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',5);";
+    String aux = "SELECT LAST_INSERT_ID();";
+    needed = database.submitQuery(aux);
+    eleicao_id = Integer.parseInt(needed.get(0));
+
+    String sql2 = "INSERT INTO Faculdade_Eleicao (faculdade_id, eleicao_id) VALUES (' " + idFac + ",'" + eleicao_id + "');";
+    database.submitQuery(sql1);
+    database.submitQuery(sql2);
+
+    return true;
+  }
+
+
+  public boolean criaEleiçãoDD(java.sql.Date beginning, java.sql.Date end, String title, String description, int idDep) throws RemoteException{
+     
+     //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
+    int eleicao_id;
+    ArrayList<String> needed;
+    String sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',6);";
+    String aux = "SELECT LAST_INSERT_ID();";
+    needed = database.submitQuery(aux);
+    eleicao_id = Integer.parseInt(needed.get(0));
+
+    database.submitQuery(sql1);
+    String sql2 = "INSERT INTO Departamento_Eleicao (faculdade_id, eleicao_id) VALUES (' " + idDep + ",'" + eleicao_id + "');";
+    database.submitQuery(sql2);
+
+    return true;
+  }
+
 
   class UDPConnection extends Thread {
 
