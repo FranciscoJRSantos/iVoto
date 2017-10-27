@@ -51,15 +51,15 @@ public class TCPServer {
             }
         }
 
-        ArrayList<Integer> tableIDList = requestTableList();
+        ArrayList<String> tableIDList = requestTableList();
 
         while (true) {
-            for (int id : tableIDList) {
+            for (String id : tableIDList) {
                 System.out.println("\tTable #" + id);
             }
             System.out.println("Pick the table's number: ");
             choice = readInt();
-            if (tableIDList.contains(choice)) {
+            if (tableIDList.contains(Integer.toString(choice))) {
                 tableID = choice;
                 System.out.printf("Table #%d was successfully picked\n", tableID);
                 break;
@@ -144,13 +144,21 @@ public class TCPServer {
 
     }
 
-    private static ArrayList<Integer> requestTableList() {
+    private static ArrayList<String> requestTableList() {
         //TODO request RMI with electionID (static)
-        ArrayList<Integer> fake = new ArrayList<>();
+/*        ArrayList<Integer> fake = new ArrayList<>();
         fake.add(1);
         fake.add(3);
         fake.add(9);
-        return fake;
+        return fake;*/
+        while (true) {
+            try {
+                return r.showTables(electionID);
+            } catch (RemoteException e) {
+                System.out.println("[Warning] Failed to use RMI showTables. Retrying connection");
+                connectToRMI();
+            }
+        }
     }
 
     public static ArrayList<String> requestCandidatesList() {
