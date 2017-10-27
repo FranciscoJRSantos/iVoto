@@ -30,19 +30,19 @@ public class TCPServer {
 
         connectToRMI();
 
-        ArrayList<Object> electionData = requestElectionsList();
-        ArrayList<Integer> electionIDList = (ArrayList<Integer>) electionData.get(0);
-        ArrayList<String> electionNameList = (ArrayList<String>) electionData.get(1);
+        ArrayList<ArrayList<String>> electionData = requestElectionsList();
+        ArrayList<String> electionIDList = electionData.get(0);
+        ArrayList<String> electionNameList = electionData.get(1);
         //TODO: Receive date. Waiting for data type decision
         while (true) {
             for (int i = 0; i < electionIDList.size(); i++) {
-                System.out.printf("\t%d - %s\n", electionIDList.get(i), electionNameList.get(i));
+                System.out.printf("\t%s - %s\n", electionIDList.get(i), electionNameList.get(i));
             }
             System.out.println("Pick the election by ID: ");
             choice = readInt();
-            if (electionIDList.contains(choice)) {
+            if (electionIDList.contains(Integer.toString(choice))) {
                 electionID = choice;
-                electionName = electionNameList.get(electionIDList.indexOf(choice));
+                electionName = electionNameList.get(electionIDList.indexOf(Integer.toString(choice)));
                 System.out.printf("Election %d '%s' was successfully picked\n", electionID, electionName);
                 break;
             } else {
