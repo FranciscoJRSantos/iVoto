@@ -68,6 +68,7 @@ public class TCPServer {
             }
         }
 
+        //TODO: Protect against no staff
         ArrayList<ArrayList<String>> staffData = requestTableStaff();
         ArrayList<String> staffCCList = staffData.get(0);
         ArrayList<String> staffNameList = staffData.get(1);
@@ -309,12 +310,11 @@ class Connection extends Thread {
             case 0:
                 if (TCPServer.checkLoginInfo(cc, m.getS1(), m.getS2())) {
                     out.println("Login successful.");
-                    int aux = 0;
                     isLogged = true;
                     String result = "";
                     ArrayList<String> candidateList = TCPServer.requestCandidatesList();
                     for (String candidate : candidateList) {
-                        result = String.format("%s\t%d - %s\n", result, aux++, candidate);
+                        result = String.format("%s\t%s\n", result, candidate);
                     }
                     result = result.concat("Pick your candidate\nUsage: 1|0|0|[Candidate's name]|0\n");
                     out.println(result);
