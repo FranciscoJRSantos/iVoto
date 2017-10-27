@@ -178,14 +178,26 @@ public class TCPServer {
     }
 
     static String checkCC(int cc) {
-        //TODO request RMI, also send election!
         //return null if not found. Return name otherwise!
-        return "That Guy";
+        while (true) {
+            try {
+                return r.checkID(cc, electionID);
+            } catch (RemoteException e) {
+                System.out.println("[Warning] Failed to use RMI checkID. Retrying connection");
+                connectToRMI();
+            }
+        }
     }
 
-    static boolean checkLoginInfo(String username, String password) {
-        //TODO request RMI
-        return true;
+    static boolean checkLoginInfo(int cc, String username, String password) {
+        while (true) {
+            try {
+                return r.checkLogin(cc, username, password);
+            } catch (RemoteException e) {
+                System.out.println("[Warning] Failed to use RMI checkLogin. Retrying connection");
+                connectToRMI();
+            }
+        }
     }
 
     static String registerVote(int cc, String s1) {
@@ -278,7 +290,7 @@ class Connection extends Thread {
 
         switch (m.getType()) {
             case 0:
-                if (TCPServer.checkLoginInfo(m.getS1(), m.getS2())) {
+                if (TCPServer.checkLoginInfo(cc, m.getS1(), m.getS2())) {
                     out.println("Login successful.");
                     int aux = 0;
                     String result = "";
