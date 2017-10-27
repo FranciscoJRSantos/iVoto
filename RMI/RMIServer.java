@@ -12,6 +12,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
@@ -79,7 +80,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   // TCP Methods
 
   public String checkID(int cc, int eleicao_id) throws RemoteException {
-    
+
     String toClient = null;
     String nameUser = null;
     ArrayList<String> aux;
@@ -154,10 +155,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return nameUser;
   }
 
-  public boolean checkLogin(String username, String password) throws RemoteException {
+  public boolean checkLogin(int cc, String username, String password) throws RemoteException {
     boolean toClient = true;
     ArrayList<String> aux;
-    String sql = "SELECT ID FROM User WHERE name='" + username + "'AND hashed_password='" + password + "';";
+    String sql = "SELECT ID FROM User WHERE numeroCC='"+ cc + "' AND name='" + username + "'AND hashed_password='" + password + "';";
     aux = database.submitQuery(sql);
     if(aux.isEmpty()){
       toClient = false;
@@ -195,7 +196,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     else{
 
     }
-
+    return true;
   }
 
   // Admin Console
@@ -278,18 +279,18 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean rmDepFac(int dep, int flag) throws RemoteException{
 
     boolean toClient = true;
-    String sql;
+    String sql="";
 
     if (flag == 1){
       sql = "DELETE FROM Departamento WHERE ID='" + dep + "';";
+      database.submitQuery(sql);
     }
     else if(flag ==2){
       sql = "DELETE FROM Faculdade WHERE ID='" + dep + "';";
+      database.submitQuery(sql);
     }
-    database.submitQuery(sql);
 
     return toClient;
-
   }
 
   public ArrayList<String> viewListsFromElection(int id) throws RemoteException{
@@ -325,11 +326,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     if(flag==1){
       sql = "INSERT INTO Departamento (name,faculdade_id) VALUES ('" + newName + "','" + faculdade_id+ "';";
+      database.submitQuery(sql);
     }
     else if (flag==2){
       sql = "INSERT INTO Faculdade (name) VALUES ('"+newName+"';";
+      database.submitQuery(sql);
     }
-    database.submitQuery(sql);
     return toClient;
   }
 
@@ -350,7 +352,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     //edita a info de uma pessoa, manda a newinfo sempre como string e depois cabe ao server passar de string para int caso seja necessario. flag 1 - name, flag 2 - Address, flag 3 - phone, flag 4 - ccn, flag 5 - ccv, flag 6 - dep, flag 7 - pass
 
     int aux;
-    String sql;
+    String sql="";
 
     switch (flag){
       case 1:
@@ -374,19 +376,23 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
         sql = "UPDATE User WHERE ID='" + idUser + "' SET departamento_id='" + aux + "';";
         break;
       case 7:
+        aux = Integer.parseInt(newInfo);
         sql = "UPDATE User WHERE ID='" + idUser + "' SET hashed_password='" + aux + "';";
         break;
       default:
         break;
 
     }
-    database.submitQuery(sql); 
+    if (!sql.equals("")){
+      database.submitQuery(sql); 
+    }
     return true;
   }   
 
   public boolean anticipatedVote(int idElec, int idUser, int vote, String pass) throws RemoteException{
     //vote antecipado. o int vote é um int da lista de listas disponiveis retornada pela "viewListsFromElection"
 
+    return true;
   } 
 
   public ArrayList<String> checkResults(int idElec) throws RemoteException{
@@ -417,11 +423,15 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     //saber quando uma pessoa votou, retorna algo que indique erro :) nao sei :) fds :)
     SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
-    Date toClient;
+    Date toClient = null;
     ArrayList<String> aux;
     String sql = "SELECT whenVoted FROM User_Eleicao WHERE user_id='" + idUser + "' AND eleicao_id='" + idElec + "';";
     aux = database.submitQuery(sql);
-    toClient =  (Date) formatter.parse(aux.get(0));
+    try{
+      toClient = formatter.parse(aux.get(0));
+    } catch (ParseException pe){
+      System.out.println("Invalid date");
+    }
 
     return toClient;
   } 
@@ -474,7 +484,17 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     //edita nome de departamento / faculdade. flag 1 - dep, flag 2 - fac
     String sql1;
-    
+
+    if (flag == 1){
+      sql1 = "UPDATE Departamento SET nome='" + newName + "' WHERE ID='" + dep + "';";
+      database.submitQuery(sql1);
+    }
+    else if (flag == 2){
+      sql1 = "UPDATE Faculdade SET nome='" + newName + "' WHERE ID='" + dep + "';";
+      database.submitQuery(sql1);
+    }
+
+    return true;
   }
 
   public boolean criaEleiçãoNE(java.sql.Date beginning, java.sql.Date end, String title, String description, int dep) throws RemoteException{
@@ -530,8 +550,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
 
   public boolean criaEleiçãoDD(java.sql.Date beginning, java.sql.Date end, String title, String description, int idDep) throws RemoteException{
-     
-     //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
+
+    //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
     int eleicao_id;
     ArrayList<String> needed;
     String sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',6);";
