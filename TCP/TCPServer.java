@@ -17,7 +17,7 @@ public class TCPServer {
 
     static int tableID;
 
-    static ArrayList<String> candidateList;
+    //static ArrayList<String> candidateList;
 
     static final List<Connection> connectionList = Collections.synchronizedList(new ArrayList<Connection>());
 
@@ -72,7 +72,7 @@ public class TCPServer {
         //TODO: This should only be requested right when the election starts!
         //Maybe have a thread waiting for the start, changing a boolean to true and caching the list.
         //Same as in unblocking in Admin Commands
-        candidateList = requestCandidatesList(); //keeping it cached
+        //candidateList = requestCandidatesList(); //keeping it cached
 
         new AdminCommands();
 
@@ -144,12 +144,21 @@ public class TCPServer {
 
     }
 
-    private static ArrayList<String> requestCandidatesList() {
+    private static ArrayList<Integer> requestTableList() {
         //TODO request RMI with electionID (static)
-        ArrayList<String> fake = new ArrayList<>();
-        fake.add("Lista coiso");
-        fake.add("Lista as vezes");
-        fake.add("Lista só mais esta");
+        ArrayList<Integer> fake = new ArrayList<>();
+        fake.add(1);
+        fake.add(3);
+        fake.add(9);
+        return fake;
+    }
+
+    public static ArrayList<String> requestCandidatesList() {
+        //TODO request RMI with electionID (static)
+//        ArrayList<String> fake = new ArrayList<>();
+//        fake.add("Lista coiso");
+//        fake.add("Lista as vezes");
+//        fake.add("Lista só mais esta");
         while (true) {
             try {
                 return r.viewListsFromElection(electionID);
@@ -158,15 +167,6 @@ public class TCPServer {
                 connectToRMI();
             }
         }
-    }
-
-    private static ArrayList<Integer> requestTableList() {
-        //TODO request RMI with electionID (static)
-        ArrayList<Integer> fake = new ArrayList<>();
-        fake.add(1);
-        fake.add(3);
-        fake.add(9);
-        return fake;
     }
 
     static String checkCC(int cc) {
@@ -275,7 +275,8 @@ class Connection extends Thread {
                     out.println("Login successful.");
                     int aux = 0;
                     String result = "";
-                    for (String candidate : TCPServer.candidateList) {
+                    ArrayList<String> candidateList = TCPServer.requestCandidatesList();
+                    for (String candidate : candidateList) {
                         result = String.format("%s\t%d - %s\n", result, aux++, candidate);
                     }
                     result = result.concat("Pick your candidate: ");
