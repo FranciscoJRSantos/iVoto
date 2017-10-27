@@ -100,10 +100,10 @@ public class TCPServer {
                 r = (ServerInterface) Naming.lookup(rmiName);
                 break;
             } catch (NotBoundException | MalformedURLException | RemoteException e) {
-                if (System.currentTimeMillis() - timestamp > 30000){
+                if (System.currentTimeMillis() - timestamp > 30000) {
                     System.out.println("[Warning] Couldn't connect to RMI after 30s. Operation dropped");
                     break;
-                } else if(!failed){
+                } else if (!failed) {
                     System.out.println("[Warning] Error connecting to RMI. Trying to reconnect...");
                     failed = true;
                 }
@@ -118,27 +118,30 @@ public class TCPServer {
 
     private static ArrayList<ArrayList<String>> requestElectionsList() {
         //TODO request RMI. Provavelmente so eleicoes futuras ou a decorrer?
+/*        ArrayList<Integer> fakeIDAnswer = new ArrayList<>();
+        fakeIDAnswer.add(2);
+        fakeIDAnswer.add(5);
+        fakeIDAnswer.add(7);
+        ArrayList<String> fakeElectionAnswer = new ArrayList<>();
+        fakeElectionAnswer.add("Uma");
+        fakeElectionAnswer.add("A outra");
+        fakeElectionAnswer.add("Ultima");
 
-//        ArrayList<Integer> fakeIDAnswer = new ArrayList<>();
-//        fakeIDAnswer.add(2);
-//        fakeIDAnswer.add(5);
-//        fakeIDAnswer.add(7);
-//        ArrayList<String> fakeElectionAnswer = new ArrayList<>();
-//        fakeElectionAnswer.add("Uma");
-//        fakeElectionAnswer.add("A outra");
-//        fakeElectionAnswer.add("Ultima");
-//
-//        ArrayList<Object> fakeTuplo = new ArrayList<>();
-//        fakeTuplo.add(fakeIDAnswer);
-//        fakeTuplo.add(fakeElectionAnswer);
-//
-//        return fakeTuplo;
-        try {
-            return r.viewCurrentElections();
-        } catch (RemoteException e) {
-            e.printStackTrace();
+        ArrayList<Object> fakeTuplo = new ArrayList<>();
+        fakeTuplo.add(fakeIDAnswer);
+        fakeTuplo.add(fakeElectionAnswer);
+
+        return fakeTuplo;*/
+        while (true) {
+            try {
+                return r.viewCurrentElections();
+            } catch (RemoteException e) {
+                System.out.println("[Warning] Failed to use RMI viewCurrentElections. Retrying connection");
+                connectToRMI();
+            }
         }
-        return null;
+
+
     }
 
     private static ArrayList<String> requestCandidatesList() {
@@ -147,7 +150,14 @@ public class TCPServer {
         fake.add("Lista coiso");
         fake.add("Lista as vezes");
         fake.add("Lista só mais esta");
-        return fake;
+        while (true) {
+            try {
+                return r.viewListsFromElection(electionID);
+            } catch (RemoteException e) {
+                System.out.println("[Warning] Failed to use RMI viewListsFromElection. Retrying connection");
+                connectToRMI();
+            }
+        }
     }
 
     private static ArrayList<Integer> requestTableList() {
