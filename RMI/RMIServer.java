@@ -172,11 +172,14 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
     ArrayList<String> cc;
     ArrayList<String> name;
-    String sql1 = "SELECT numeroCC FROM User WHERE='" + eleicao_id + "';";
-    String sql2 = "SELECT name FROM User WHERE='" + eleicao_id + "';";
+    String sql1 = "SELECT numeroCC FROM User WHERE mesavoto_id='" + mesavoto_id + "';";
+    String sql2 = "SELECT name FROM User WHERE mesavoto_id='" + mesavoto_id + "';";
 
     cc = database.submitQuery(sql1);
     name = database.submitQuery(sql2);
+
+    System.out.println(cc);
+    System.out.println(name);
 
     toClient.add(cc);
     toClient.add(name);
@@ -252,23 +255,30 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public String vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException{
 
     // FINNISH THISSSSSSSSSSSSSSSSSSSSSSSSSSSSSS 
-    String toClient;
+    String toClient = null;
     ArrayList<String> aux1;
     ArrayList<String> aux2;
-    String sql1 = "UPDATE Lista SET votos = votos +1 WHERE name='" + lista + "';";
-    database.submitQuery(sql1);
-    String sql2 = "SELECT ID FROM User WHERE numeroCC='" + cc + "';";
-    aux1 = database.submitQuery(sql2);
-    System.out.println(aux1);
-    String sql3 = "SELECT hasVoted FROM User_Eleicao WHERE user_id='" + aux1.get(0) + "' AND eleicao_id='" +  eleicao_id + "';";
-    aux2 = database.submitQuery(sql3);
-    if (aux2.isEmpty()){
-      String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id) VALUES('" + aux1.get(0) + "'," + eleicao_id + "," + ",True,'" + mesavoto_id + "');";
-      database.submitQuery(sql5);
-      toClient = lista;
+    ArrayList<String> aux3;
+    String sql6 = "SELECT ID FROM Lista WHERE nome='" + lista + "';";
+    aux3 = database.submitQuery(sql6);
+    if (!aux3.isEmpty()){
+      String sql1 = "UPDATE Lista SET votos = votos +1 WHERE nome='" + lista + "';";
+      String sql2 = "SELECT ID FROM User WHERE numeroCC='" + cc + "';";
+
+      aux1 = database.submitQuery(sql2);
+      String sql3 = "SELECT hasVoted FROM User_Eleicao WHERE user_id='" + aux1.get(0) + "' AND eleicao_id='" +  eleicao_id + "';";
+      aux2 = database.submitQuery(sql3);
+      if (aux2.isEmpty()){
+        String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id,whenVoted) VALUES('" + aux1.get(0) + "'," + eleicao_id + ",True,'" + mesavoto_id + "',NOW());";
+        database.submitUpdate(sql5);
+        database.submitUpdate(sql1);
+        toClient = lista;
+      }
+      else{
+        toClient = null;
+      }
     }
     else{
-      toClient = null;
     }
     return toClient;
   }
