@@ -79,6 +79,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   public void startUDPConnection(){ this.heartbeat = new UDPConnection(mainServer); }
 
+
+  public boolean isConnected() throws RemoteException { return true; }
+
   // TCP Methods
 
   public String checkID(int cc, int eleicao_id) throws RemoteException {
