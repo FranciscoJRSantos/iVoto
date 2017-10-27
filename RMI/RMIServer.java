@@ -183,6 +183,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return toClient;
   }
+  
+  public boolean addTableToElection(int elecID) throws RemoteException{
+    
+    boolean toClient = true;
+    String sql = "INSERT INTO "
+
+  }
 
   public boolean checkLogin(int cc, String username, String password) throws RemoteException {
     boolean toClient = true;
@@ -213,10 +220,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return aux;
   }
 
-  public boolean vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException{
+  public String vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException{
 
     // FINNISH THISSSSSSSSSSSSSSSSSSSSSSSSSSSSSS 
-    boolean toClient = true;
+    String toClient;
     ArrayList<String> aux1;
     ArrayList<String> aux2;
     String sql1 = "UPDATE Lista SET votos = votos +1 WHERE name='" + lista + "';";
@@ -229,9 +236,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     if (aux2.isEmpty()){
       String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id) VALUES('" + aux1.get(0) + "'," + eleicao_id + "," + ",True,'" + mesavoto_id + "');";
       database.submitQuery(sql5);
+      tpClient = lista;
     }
     else{
-      toClient = false;
+      toClient = null;
     }
     return toClient;
   }
