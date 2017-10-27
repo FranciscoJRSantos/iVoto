@@ -1,5 +1,6 @@
 import java.net.*;
 import java.io.*;
+import java.rmi.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +28,7 @@ public class TCPServer {
         serverPort = c.getTCPPort();
         rmiName = c.getRMIName();
 
+        connectToRMI();
 
         ArrayList<Object> electionData = requestElectionsList();
         ArrayList<Integer> electionIDList = (ArrayList<Integer>) electionData.get(0);
@@ -90,22 +92,53 @@ public class TCPServer {
         }
     }
 
-    private static ArrayList<Object> requestElectionsList() {
+    private static void connectToRMI() {
+        long timestamp = System.currentTimeMillis();
+        boolean failed = false;
+        while (true) {
+            try {
+                r = (ServerInterface) Naming.lookup(rmiName);
+                break;
+            } catch (NotBoundException | MalformedURLException | RemoteException e) {
+                if (System.currentTimeMillis() - timestamp > 30000){
+                    System.out.println("[Warning] Couldn't connect to RMI after 30s. Operation dropped");
+                    break;
+                } else if(!failed){
+                    System.out.println("[Warning] Error connecting to RMI. Trying to reconnect...");
+                    failed = true;
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e1) {
+                    break;
+                }
+            }
+        }
+    }
+
+    private static ArrayList<ArrayList<String>> requestElectionsList() {
         //TODO request RMI. Provavelmente so eleicoes futuras ou a decorrer?
-        ArrayList<Integer> fakeIDAnswer = new ArrayList<>();
-        fakeIDAnswer.add(2);
-        fakeIDAnswer.add(5);
-        fakeIDAnswer.add(7);
-        ArrayList<String> fakeElectionAnswer = new ArrayList<>();
-        fakeElectionAnswer.add("Uma");
-        fakeElectionAnswer.add("A outra");
-        fakeElectionAnswer.add("Ultima");
 
-        ArrayList<Object> fakeTuplo = new ArrayList<>();
-        fakeTuplo.add(fakeIDAnswer);
-        fakeTuplo.add(fakeElectionAnswer);
-
-        return fakeTuplo;
+//        ArrayList<Integer> fakeIDAnswer = new ArrayList<>();
+//        fakeIDAnswer.add(2);
+//        fakeIDAnswer.add(5);
+//        fakeIDAnswer.add(7);
+//        ArrayList<String> fakeElectionAnswer = new ArrayList<>();
+//        fakeElectionAnswer.add("Uma");
+//        fakeElectionAnswer.add("A outra");
+//        fakeElectionAnswer.add("Ultima");
+//
+//        ArrayList<Object> fakeTuplo = new ArrayList<>();
+//        fakeTuplo.add(fakeIDAnswer);
+//        fakeTuplo.add(fakeElectionAnswer);
+//
+//        return fakeTuplo;
+        try {
+            return r.viewCurrentElections();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private static ArrayList<String> requestCandidatesList() {
@@ -248,11 +281,10 @@ class Connection extends Thread {
                 }
                 //TODO: Send vote, allow for null our white votes
                 String aux = TCPServer.registerVote(cc, m.getS1());
-                if (aux != null){
+                if (aux != null) {
                     out.printf("Vote for candidate %s registered successfully.\n", aux);
                     blockTerminal();
-                }
-                else {
+                } else {
                     out.println("An error happened while voting. Please vote again.");
                     break;
                 }
