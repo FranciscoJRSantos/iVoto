@@ -88,7 +88,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> aux;
     ArrayList<String> aux2;
     ArrayList<String> aux3;
-    int role, departamento_id, faculdade_id, election_type, departamento_eleicao, faculdade_eleicao;
+    int role, departamento_id, faculdade_id, election_type, departamento_eleicao=0, faculdade_eleicao=0;
 
     String sql1 = "SELECT role,name FROM User WHERE numeroCC='" + cc + "';";
     String sql2 = "SELECT tipo FROM Eleicao WHERE ID='" + eleicao_id + "';";
@@ -99,8 +99,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
 
     aux2 = database.submitQuery(sql1);
-    role = Integer.parseInt(aux2.get(0));
-    nameUser = aux2.get(1);
+    if (aux2.isEmpty()){
+      return null;
+    }
+    else {
+      role = Integer.parseInt(aux2.get(0));
+      nameUser = aux2.get(1);
+    }
 
     aux2 = database.submitQuery(sql3);
     faculdade_id = Integer.parseInt(aux2.get(0));
@@ -111,9 +116,14 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     aux3 = database.submitQuery(sql2);
     election_type = Integer.parseInt(aux3.get(0));
     aux3 = database.submitQuery(sql5);
-    departamento_eleicao = Integer.parseInt(aux3.get(0));
+    if (!aux3.isEmpty()){
+      departamento_eleicao = Integer.parseInt(aux3.get(0));
+    }
+
     aux3 = database.submitQuery(sql6);
-    faculdade_eleicao = Integer.parseInt(aux3.get(0));
+    if (!aux3.isEmpty()){
+      faculdade_eleicao = Integer.parseInt(aux3.get(0));
+    }
 
     switch (election_type){
       case 1:
