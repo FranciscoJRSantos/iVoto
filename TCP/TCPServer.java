@@ -1,3 +1,4 @@
+import javax.xml.bind.SchemaOutputResolver;
 import java.net.*;
 import java.io.*;
 import java.rmi.*;
@@ -16,8 +17,6 @@ public class TCPServer {
     static String electionName;
 
     static int tableID;
-
-    //static ArrayList<String> candidateList;
 
     static final List<Connection> connectionList = Collections.synchronizedList(new ArrayList<Connection>());
 
@@ -69,13 +68,39 @@ public class TCPServer {
             }
         }
 
-        //TODO: This should only be requested right when the election starts!
-        //Maybe have a thread waiting for the start, changing a boolean to true and caching the list.
-        //Same as in unblocking in Admin Commands
-        //candidateList = requestCandidatesList(); //keeping it cached
+        ArrayList<ArrayList<String>> staffData = requestTableStaff();
+        ArrayList<String> staffCCList = staffData.get(0);
+        ArrayList<String> staffNameList = staffData.get(1);
+        int staffCC;
+        String staffName;
+        while (true) {
+            for (int i = 0; i < staffCCList.size(); i++) {
+                System.out.printf("\tCC:%s\tNome:%s\n", staffCCList.get(i), staffNameList.get(i));
+            }
+            System.out.println("Pick staff to login by CC:");
+            choice = readInt();
+            if (staffCCList.contains(Integer.toString(choice))) {
+                staffCC = choice;
+                staffName = staffNameList.get(staffCCList.indexOf(Integer.toString(choice)));
+                System.out.printf("Picked staff member '%s' (CC: %d)\n", staffName, staffCC);
+                System.out.println("Insert password");
+                Scanner sc = new Scanner(System.in);
+                if(checkLoginInfo(staffCC, staffName, sc.nextLine())){
+                    System.out.println("Login successful");
+                    break;
+                }
+                else{
+                    System.out.println("Wrong password!");
+                    enterToContinue();
+                }
+            } else {
+                System.out.println("No staff has such CC!");
+                enterToContinue();
+            }
+        }
+
 
         new AdminCommands();
-
 
         try {
             System.out.println("Listening to port" + serverPort);
@@ -140,12 +165,12 @@ public class TCPServer {
         }
     }
 
-    public static ArrayList<String> requestCandidatesList() {
+    private static ArrayList<ArrayList<String>> requestTableStaff(){
         while (true) {
             try {
-                return r.viewListsFromElection(electionID);
+                return r.showUserTable(electionID, tableID);
             } catch (RemoteException e) {
-                System.out.println("[Warning] Failed to use RMI viewListsFromElection. Retrying connection");
+                System.out.println("[Warning] Failed to use RMI showTables. Retrying connection");
                 connectToRMI();
             }
         }
@@ -174,6 +199,17 @@ public class TCPServer {
         }
     }
 
+    static ArrayList<String> requestCandidatesList() {
+        while (true) {
+            try {
+                return r.viewListsFromElection(electionID);
+            } catch (RemoteException e) {
+                System.out.println("[Warning] Failed to use RMI viewListsFromElection. Retrying connection");
+                connectToRMI();
+            }
+        }
+    }
+
     static String registerVote(int cc, String candidateName) {
         //TODO send to RMI along with electionID (static), tableID (static)
         //receive voted list (name, null or white)
@@ -181,13 +217,13 @@ public class TCPServer {
             try {
                 return r.vote(cc, candidateName, electionID, tableID);
             } catch (RemoteException e) {
-                System.out.println("[Warning] Failed to use RMI checkLogin. Retrying connection");
+                System.out.println("[Warning] Failed to use RMI vote. Retrying connection");
                 connectToRMI();
             }
         }
     }
 
-    public static int readInt() {
+    static int readInt() {
         Scanner sc = new Scanner(System.in);
         String aux;
         int num;
@@ -202,7 +238,7 @@ public class TCPServer {
         }
     }
 
-    public static void enterToContinue() {
+    static void enterToContinue() {
         System.out.println("Press enter to continue...");
         Scanner sc = new Scanner(System.in);
         sc.nextLine();

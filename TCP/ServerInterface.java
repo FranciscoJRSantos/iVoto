@@ -35,4 +35,7 @@ public interface ServerInterface extends Remote{
   public ArrayList<String> verDepartamentos() throws RemoteException;
   public boolean createList(String nome, int tipo, int eleicao_id) throws RemoteException;
   public ArrayList<String> showTables(int eleicao_id) throws RemoteException;
+  public ArrayList<ArrayList<String>> showUserTable(int eleicao_id, int mesavoto_id) throws RemoteException;
+  public boolean addTableToElection(int elecID, int idDep) throws RemoteException;
+  public boolean removeTableFromElection(int elecID, int table) throws RemoteException;
 }
