@@ -76,5 +76,22 @@ public class DatabaseConnection{
             return var2;
         }
     }
+
+    public void submitUpdate(String var1){
+      System.out.println("Comando sql:" + var1);
+
+      try {
+        Statement var3 = connection.createStatement();
+        var3.executeUpdate(var1);
+
+        var3.close();
+        return;
+      } catch (SQLException var8) {
+        System.out.println(var8);
+        System.out.println("SQLException");
+        return; 
+      }
+
+    }
 }
 
