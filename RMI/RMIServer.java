@@ -40,7 +40,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   }
 
   public static void main(String args[]) throws RemoteException{
- 
+
     System.getProperties().put("java.security.policy", "policy.all");
     System.setSecurityManager(new SecurityManager());
     RMIServer rmiServer = new RMIServer();
@@ -168,13 +168,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   }
 
   public ArrayList<ArrayList<String>> showUserTable(int eleicao_id, int mesavoto_id){
-    
+
     ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
     ArrayList<String> cc;
     ArrayList<String> name;
     String sql1 = "SELECT numeroCC FROM User WHERE='" + eleicao_id + "';";
     String sql2 = "SELECT name FROM User WHERE='" + eleicao_id + "';";
-  
+
     cc = database.submitQuery(sql1);
     name = database.submitQuery(sql2);
 
@@ -183,24 +183,41 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return toClient;
   }
-  
+
   public boolean addTableToElection(int elecID, int idDep) throws RemoteException{
-    
+
     //TODO: Protect against multiple tables in same dep
     boolean toClient = true;
-    String sql = "INSERT INTO MesaVoto (active,departamento_id,eleicao_id,numeroVotos) VALUES ('False','" + idDep + "','" + elecID + ",0);"; 
+    ArrayList<String> protection;
+    String protect = "SELECT * FROM MesaVoto WHERE departamento_id='" + idDep + "';";
+    protection = database.submitQuery(protect);
 
-    database.submitQuery(sql);
-    
-    return true;
+    if (!protection.isEmpty()){
+      String sql = "INSERT INTO MesaVoto (active,departamento_id,eleicao_id,numeroVotos) VALUES ('False','" + idDep + "','" + elecID + ",0);"; 
+      database.submitQuery(sql);
+    }
+    else{
+      toClient = false;
+    }
+
+    return toClient;
   }
 
   public boolean removeTableFromElection(int elecID, int table) throws RemoteException{
     //TODO: Protect against removing tables in election
-    String sql = "DELETE FROM MesaVoto WHERE ID='" + table + "';";
-    database.submitQuery(sql);
+    boolean toClient = true;
+    ArrayList<String> protection;
+    String protect = "SELECT Eleicao WHERE='" + elecID + "' AND active = True;";
+    protection = database.submitQuery(protect);
+    if (!protection.isEmpty()){
+      String sql = "DELETE FROM MesaVoto WHERE ID='" + table + "';";
+      database.submitQuery(sql);
+    }
+    else{
+      toClient = false;
+    }
 
-    return true;
+    return toClient;
   }
 
   public boolean checkLogin(int cc, String username, String password) throws RemoteException {
@@ -456,7 +473,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   } 
 
   public boolean createList(String nome, int tipo, int eleicao_id) throws RemoteException{
-    
+
     String sql = "INSERT INTO Lista (name,tipo,votos,eleicao_id) VALUES('"+ nome +"','"+ tipo + "','" + "',0,'" + eleicao_id + "');";
     database.submitQuery(sql);
 
