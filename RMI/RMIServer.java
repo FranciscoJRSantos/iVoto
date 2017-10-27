@@ -170,25 +170,26 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public ArrayList<ArrayList<String>> showUserTable(int eleicao_id, int mesavoto_id){
     
     ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
-    ArrayList<String> ids;
+    ArrayList<String> cc;
     ArrayList<String> name;
-    String sql1 = "SELECT ID FROM User WHERE='" + eleicao_id + "';";
+    String sql1 = "SELECT numeroCC FROM User WHERE='" + eleicao_id + "';";
     String sql2 = "SELECT name FROM User WHERE='" + eleicao_id + "';";
   
-    ids = database.submitQuery(sql1);
+    cc = database.submitQuery(sql1);
     name = database.submitQuery(sql2);
 
-    toClient.add(ids);
+    toClient.add(cc);
     toClient.add(name);
 
     return toClient;
   }
   
-  public boolean addTableToElection(int elecID) throws RemoteException{
+  public boolean addTableToElection(int elecID, int idDep) throws RemoteException{
     
     boolean toClient = true;
-    String sql = "INSERT INTO "
-
+    String sql = "INSERT INTO MesaVoto (active,departamento_id,eleicao_id,numeroVotos) VALUES ('False','" + idDep + "','" + elecID + ",0);"; 
+    
+    return true;
   }
 
   public boolean checkLogin(int cc, String username, String password) throws RemoteException {
@@ -236,7 +237,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     if (aux2.isEmpty()){
       String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id) VALUES('" + aux1.get(0) + "'," + eleicao_id + "," + ",True,'" + mesavoto_id + "');";
       database.submitQuery(sql5);
-      tpClient = lista;
+      toClient = lista;
     }
     else{
       toClient = null;
