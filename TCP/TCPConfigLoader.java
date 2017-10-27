@@ -3,8 +3,8 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class TCPConfigLoader{
-
     private int tcpPort;
+    private String rmiName;
 
     public TCPConfigLoader(){
         Properties prop = new java.util.Properties();
@@ -21,7 +21,7 @@ public class TCPConfigLoader{
             prop.load(input);
 
             this.tcpPort = Integer.parseInt(prop.getProperty("tcpPort"));
-
+            this.rmiName=prop.getProperty("rmiName");
 
         } catch (IOException ioe){
             ioe.printStackTrace();
@@ -37,5 +37,6 @@ public class TCPConfigLoader{
     }
 
     public int getTCPPort() { return this.tcpPort; }
+    public String getRMIName() { return this.rmiName; }
 
 }

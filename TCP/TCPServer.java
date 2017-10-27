@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TCPServer {
     static int serverPort;
+    static String rmiName;
+    static ServerInterface r;
 
     static int electionID;
     static String electionName;
@@ -23,6 +25,7 @@ public class TCPServer {
         int choice;
         TCPConfigLoader c = new TCPConfigLoader();
         serverPort = c.getTCPPort();
+        rmiName = c.getRMIName();
 
 
         ArrayList<Object> electionData = requestElectionsList();
