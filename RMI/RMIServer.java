@@ -177,6 +177,15 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
+  public ArrayList<String> showTables(int eleicao_id) throws RemoteException{
+
+    ArrayList<String> aux;
+    String sql = "SELECT ID FROM MesaVoto WHERE eleicao_id='" + eleicao_id + "';";
+
+    aux = database.submitQuery(sql);
+    return aux;
+  }
+
   public boolean vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException{
 
     // FINNISH THISSSSSSSSSSSSSSSSSSSSSSSSSSSSSS 
@@ -398,6 +407,14 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return true;
   } 
+
+  public boolean createList(String nome, int tipo, int eleicao_id) throws RemoteException{
+    
+    String sql = "INSERT INTO Lista (name,tipo,votos,eleicao_id) VALUES('"+ nome +"','"+ tipo + "','" + "',0,'" + eleicao_id + "');";
+    database.submitQuery(sql);
+
+    return true;
+  }
 
   public ArrayList<String> checkResults(int idElec) throws RemoteException{
     //recebe uma lista com [[lista,nº de votos],...]. return [[null,null]] em caso de insucesso

@@ -33,4 +33,6 @@ public interface ServerInterface extends Remote{
   public boolean manageTable(int idTable, int idUser, int idNewUser) throws RemoteException; //mudar a pessoa que está na mesa 
   public ArrayList<String> verFaculdades() throws RemoteException;
   public ArrayList<String> verDepartamentos() throws RemoteException;
+  public boolean createList(String nome, int tipo,int eleicao_id) throws RemoteException;
+  public ArrayList<String> showTables(int eleicao_id) throws RemoteException;
 }
