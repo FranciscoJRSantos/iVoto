@@ -186,9 +186,20 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   
   public boolean addTableToElection(int elecID, int idDep) throws RemoteException{
     
+    //TODO: Protect against multiple tables in same dep
     boolean toClient = true;
     String sql = "INSERT INTO MesaVoto (active,departamento_id,eleicao_id,numeroVotos) VALUES ('False','" + idDep + "','" + elecID + ",0);"; 
+
+    database.submitQuery(sql);
     
+    return true;
+  }
+
+  public boolean removeTableFromElection(int elecID, int table) throws RemoteException{
+    //TODO: Protect against removing tables in election
+    String sql = "DELETE FROM MesaVoto WHERE ID='" + table + "';";
+    database.submitQuery(sql);
+
     return true;
   }
 
