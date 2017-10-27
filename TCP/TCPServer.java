@@ -117,21 +117,6 @@ public class TCPServer {
     }
 
     private static ArrayList<ArrayList<String>> requestElectionsList() {
-        //TODO request RMI. Provavelmente so eleicoes futuras ou a decorrer?
-/*        ArrayList<Integer> fakeIDAnswer = new ArrayList<>();
-        fakeIDAnswer.add(2);
-        fakeIDAnswer.add(5);
-        fakeIDAnswer.add(7);
-        ArrayList<String> fakeElectionAnswer = new ArrayList<>();
-        fakeElectionAnswer.add("Uma");
-        fakeElectionAnswer.add("A outra");
-        fakeElectionAnswer.add("Ultima");
-
-        ArrayList<Object> fakeTuplo = new ArrayList<>();
-        fakeTuplo.add(fakeIDAnswer);
-        fakeTuplo.add(fakeElectionAnswer);
-
-        return fakeTuplo;*/
         while (true) {
             try {
                 return r.viewCurrentElections();
@@ -145,12 +130,6 @@ public class TCPServer {
     }
 
     private static ArrayList<String> requestTableList() {
-        //TODO request RMI with electionID (static)
-/*        ArrayList<Integer> fake = new ArrayList<>();
-        fake.add(1);
-        fake.add(3);
-        fake.add(9);
-        return fake;*/
         while (true) {
             try {
                 return r.showTables(electionID);
@@ -162,11 +141,6 @@ public class TCPServer {
     }
 
     public static ArrayList<String> requestCandidatesList() {
-        //TODO request RMI with electionID (static)
-//        ArrayList<String> fake = new ArrayList<>();
-//        fake.add("Lista coiso");
-//        fake.add("Lista as vezes");
-//        fake.add("Lista só mais esta");
         while (true) {
             try {
                 return r.viewListsFromElection(electionID);
@@ -200,10 +174,17 @@ public class TCPServer {
         }
     }
 
-    static String registerVote(int cc, String s1) {
+    static String registerVote(int cc, String candidateName) {
         //TODO send to RMI along with electionID (static), tableID (static)
         //receive voted list (name, null or white)
-        return "fake";
+        while (true) {
+            try {
+                return r.vote(cc, candidateName, electionID, tableID);
+            } catch (RemoteException e) {
+                System.out.println("[Warning] Failed to use RMI checkLogin. Retrying connection");
+                connectToRMI();
+            }
+        }
     }
 
     public static int readInt() {
@@ -299,7 +280,7 @@ class Connection extends Thread {
                     for (String candidate : candidateList) {
                         result = String.format("%s\t%d - %s\n", result, aux++, candidate);
                     }
-                    result = result.concat("Pick your candidate\nUsage: 1|[candidate's #]|0|0|0\n");
+                    result = result.concat("Pick your candidate\nUsage: 1|0|0|[Candidate's name]|0\n");
                     out.println(result);
                 } else {
                     out.println("Login data was incorrect");
