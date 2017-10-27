@@ -167,6 +167,23 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return nameUser;
   }
 
+  public ArrayList<ArrayList<String>> showUserTable(int eleicao_id, int mesavoto_id){
+    
+    ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
+    ArrayList<String> ids;
+    ArrayList<String> name;
+    String sql1 = "SELECT ID FROM User WHERE='" + eleicao_id + "';";
+    String sql2 = "SELECT name FROM User WHERE='" + eleicao_id + "';";
+  
+    ids = database.submitQuery(sql1);
+    name = database.submitQuery(sql2);
+
+    toClient.add(ids);
+    toClient.add(name);
+
+    return toClient;
+  }
+
   public boolean checkLogin(int cc, String username, String password) throws RemoteException {
     boolean toClient = true;
     ArrayList<String> aux;
