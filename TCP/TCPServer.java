@@ -30,10 +30,10 @@ public class TCPServer {
 
         connectToRMI();
 
+        //TODO: Protect against no elections
         ArrayList<ArrayList<String>> electionData = requestElectionsList();
         ArrayList<String> electionIDList = electionData.get(0);
         ArrayList<String> electionNameList = electionData.get(1);
-        //TODO: Receive date. Waiting for data type decision
         while (true) {
             for (int i = 0; i < electionIDList.size(); i++) {
                 System.out.printf("\t%s - %s\n", electionIDList.get(i), electionNameList.get(i));
@@ -51,8 +51,8 @@ public class TCPServer {
             }
         }
 
+        //TODO: Protect against no tables
         ArrayList<String> tableIDList = requestTableList();
-
         while (true) {
             for (String id : tableIDList) {
                 System.out.println("\tTable #" + id);
@@ -178,14 +178,26 @@ public class TCPServer {
     }
 
     static String checkCC(int cc) {
-        //TODO request RMI, also send election!
         //return null if not found. Return name otherwise!
-        return "That Guy";
+        while (true) {
+            try {
+                return r.checkID(cc, electionID);
+            } catch (RemoteException e) {
+                System.out.println("[Warning] Failed to use RMI checkID. Retrying connection");
+                connectToRMI();
+            }
+        }
     }
 
-    static boolean checkLoginInfo(String username, String password) {
-        //TODO request RMI
-        return true;
+    static boolean checkLoginInfo(int cc, String username, String password) {
+        while (true) {
+            try {
+                return r.checkLogin(cc, username, password);
+            } catch (RemoteException e) {
+                System.out.println("[Warning] Failed to use RMI checkLogin. Retrying connection");
+                connectToRMI();
+            }
+        }
     }
 
     static String registerVote(int cc, String s1) {
@@ -258,7 +270,7 @@ class Connection extends Thread {
     }
 
     private void answerMessage(String s) {
-        //TODO: Make sure everything waits up to 30s!
+        //type|i1|i2|s1|s2|list[0]|list[1]|list[2]|...
 
         if (isBlocked) {
             out.println("Terminal is blocked. Message ignored.");
@@ -275,11 +287,10 @@ class Connection extends Thread {
             out.println("Message not valid!");
             return;
         }
-        //out.printf("type:%d, s3:%s, sList:%s\n", m.getType(), m.getS3(), m.getsList());
 
         switch (m.getType()) {
             case 0:
-                if (TCPServer.checkLoginInfo(m.getS1(), m.getS2())) {
+                if (TCPServer.checkLoginInfo(cc, m.getS1(), m.getS2())) {
                     out.println("Login successful.");
                     int aux = 0;
                     String result = "";
@@ -287,7 +298,7 @@ class Connection extends Thread {
                     for (String candidate : candidateList) {
                         result = String.format("%s\t%d - %s\n", result, aux++, candidate);
                     }
-                    result = result.concat("Pick your candidate: ");
+                    result = result.concat("Pick your candidate\nUsage: 1|[candidate's #]|0|0|0");
                     out.println(result);
                 } else {
                     out.println("Login data was incorrect");
@@ -334,7 +345,7 @@ class Connection extends Thread {
         recentActivity.set(false);
         timer = new TimeoutTimer(this);
         System.out.printf("Unblocked terminal #%d. Timeout will occur if inactive for 120 seconds\n", terminalID);
-        out.printf("This terminal has been unlocked for %s (CC: %d). Timeout will occur if inactive for 120 seconds\nPlease login:\n", name, cc);
+        out.printf("This terminal has been unlocked for %s (CC: %d). Timeout will occur if inactive for 120 seconds\nPlease login:\nUsage: 0|0|0|[username]|[password]", name, cc);
         //TODO Still testing this
         return true;
     }
@@ -351,7 +362,7 @@ class Connection extends Thread {
 
 class TimeoutTimer extends Thread {
     //120 seconds = 120000 ms
-    private static final int TIMEOUT_VALUE = 12000;
+    private static final int TIMEOUT_VALUE = 120000;
     Connection parent;
 
     TimeoutTimer(Connection connection) {
