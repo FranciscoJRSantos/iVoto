@@ -7,7 +7,7 @@ public interface ServerInterface extends Remote{
   public String checkID(int cc, int eleicao_id) throws RemoteException;
   public boolean checkLogin(int cc, String username, String password) throws RemoteException;     //recebe CC, username, password, checka se bate certo na base de dados
   public ArrayList<String>  listCandidates(int mesavoto_id) throws RemoteException;
-  public boolean vote(int cc, String lista, int eleicao_id) throws RemoteException;
+  public boolean vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException;
 
   // Admin Console - todas as boolean retornam true em caso de sucesso e false em caso de insucesso
   public boolean addPerson(String name, String Address, int phone, int ccn, int ccv, int dep, int fac, String pass, int type) throws RemoteException; //registar pessoa, type 1 - docente, type 2 - funcionario, type 3 - aluno. ccn - numero do cc, ccv - validade do cc

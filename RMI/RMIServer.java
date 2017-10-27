@@ -40,7 +40,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   }
 
   public static void main(String args[]) throws RemoteException{
-
+ 
+    System.getProperties().put("java.security.policy", "policy.all");
+    System.setSecurityManager(new SecurityManager());
     RMIServer rmiServer = new RMIServer();
 
   }
@@ -175,7 +177,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
-  public boolean vote(int cc, String lista, int eleicao_id) throws RemoteException{
+  public boolean vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException{
 
     // FINNISH THISSSSSSSSSSSSSSSSSSSSSSSSSSSSSS 
     boolean toClient = true;
@@ -186,17 +188,16 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     String sql2 = "SELECT ID FROM User WHERE numeroCC='" + cc + "';";
     aux1 = database.submitQuery(sql2);
     System.out.println(aux1);
-    String sql3 = "SELECT ID FROM Eleicao WHERE ;";
-    String sql4 = "SELECT hasVoted FROM User_Eleicao WHERE user_id='" + aux1.get(0) + "' AND eleicao_id='" +  eleicao_id + "';";
-    aux2 = database.submitQuery(sql4);
+    String sql3 = "SELECT hasVoted FROM User_Eleicao WHERE user_id='" + aux1.get(0) + "' AND eleicao_id='" +  eleicao_id + "';";
+    aux2 = database.submitQuery(sql3);
     if (aux2.isEmpty()){
-      String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted) VALUES('" + aux1.get(0) + "'," + eleicao_id + "," + ",True);";
+      String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id) VALUES('" + aux1.get(0) + "'," + eleicao_id + "," + ",True,'" + mesavoto_id + "');";
       database.submitQuery(sql5);
     }
     else{
-
+      toClient = false;
     }
-    return true;
+    return toClient;
   }
 
   // Admin Console
@@ -246,6 +247,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> titulos;
     ArrayList<String> dateInicio;
     ArrayList<String> dateFim;
+
+    //TODO: only view active and future elections
+
     String sql1 = "SELECT ID FROM Eleicao;";
     ID = database.submitQuery(sql1);
     sql1 = "SELECT titulo FROM Eleicao;";
@@ -618,7 +622,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
               try{
 
                 Thread.sleep(1000);
-                DatagramPacket toSend = new DatagramPacket(message,message.length,InetAddress.getByName("localhost"),secUDP);
+                DatagramPacket toSend = new DatagramPacket(message,message.length,InetAddress.getByName("127.0.0.1"),secUDP);
                 aSocket.send(toSend);
                 System.out.println("[UDP] Ping");
                 DatagramPacket toReceive = new DatagramPacket(buffer,buffer.length);
@@ -670,7 +674,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
               try{
 
                 Thread.sleep(1000);
-                DatagramPacket toSend = new DatagramPacket(message,message.length,InetAddress.getByName("localhost"),mainUDP);
+                DatagramPacket toSend = new DatagramPacket(message,message.length,InetAddress.getByName("127.0.0.1"),mainUDP);
 
                 aSocket.send(toSend);
                 System.out.println("[UDP] Ping");
