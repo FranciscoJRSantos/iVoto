@@ -293,12 +293,13 @@ class Connection extends Thread {
                 if (TCPServer.checkLoginInfo(cc, m.getS1(), m.getS2())) {
                     out.println("Login successful.");
                     int aux = 0;
+                    isLogged = true;
                     String result = "";
                     ArrayList<String> candidateList = TCPServer.requestCandidatesList();
                     for (String candidate : candidateList) {
                         result = String.format("%s\t%d - %s\n", result, aux++, candidate);
                     }
-                    result = result.concat("Pick your candidate\nUsage: 1|[candidate's #]|0|0|0");
+                    result = result.concat("Pick your candidate\nUsage: 1|[candidate's #]|0|0|0\n");
                     out.println(result);
                 } else {
                     out.println("Login data was incorrect");
@@ -345,7 +346,7 @@ class Connection extends Thread {
         recentActivity.set(false);
         timer = new TimeoutTimer(this);
         System.out.printf("Unblocked terminal #%d. Timeout will occur if inactive for 120 seconds\n", terminalID);
-        out.printf("This terminal has been unlocked for %s (CC: %d). Timeout will occur if inactive for 120 seconds\nPlease login:\nUsage: 0|0|0|[username]|[password]", name, cc);
+        out.printf("This terminal has been unlocked for %s (CC: %d). Timeout will occur if inactive for 120 seconds\nPlease login:\nUsage: 0|0|0|[username]|[password]\n", name, cc);
         //TODO Still testing this
         return true;
     }

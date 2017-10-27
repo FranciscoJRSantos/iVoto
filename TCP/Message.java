@@ -7,24 +7,19 @@ public class Message {
     private String s1;
     private String s2;
     private ArrayList<String> sList;
-    private Boolean isValid = true;
+    private Boolean isValid = false;
 
     //type|i1|i2|s1|s2|list[0]|list[1]|list[2]|...
     public Message(String msg) {
+        if(msg==null) return;
         String[] split = msg.split("\\|");
         int aux = split.length;
-        if (aux < 5){
-            isValid = false;
-            return;
-        }
+        if (aux < 5) return;
         try {
             type = Integer.parseInt(split[0]);
             i1 = Integer.parseInt(split[1]);
             i2 = Integer.parseInt(split[2]);
-        } catch (NumberFormatException e){
-            isValid = false;
-            return;
-        }
+        } catch (NumberFormatException e){ return;}
 
         s1 = split[3];
         s2 = split[4];
@@ -33,6 +28,7 @@ public class Message {
         for (int i = 5; i < aux; i++) {
             sList.add(split[i]);
         }
+        isValid = true;
     }
 
     public Message(int type, int i1, int i2, String s1, String s2, ArrayList<String> sList) {
