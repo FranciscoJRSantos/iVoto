@@ -186,7 +186,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   public boolean addTableToElection(int elecID, int idDep) throws RemoteException{
 
-    //TODO: Protect against multiple tables in same dep
     boolean toClient = true;
     ArrayList<String> protection;
     String protect = "SELECT * FROM MesaVoto WHERE departamento_id='" + idDep + "';";
@@ -204,7 +203,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   }
 
   public boolean removeTableFromElection(int elecID, int table) throws RemoteException{
-    //TODO: Protect against removing tables in election
+
     boolean toClient = true;
     ArrayList<String> protection;
     String protect = "SELECT Eleicao WHERE='" + elecID + "' AND active = True;";
@@ -221,6 +220,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   }
 
   public boolean checkLogin(int cc, String username, String password) throws RemoteException {
+
     boolean toClient = true;
     ArrayList<String> aux;
     String sql = "SELECT ID FROM User WHERE numeroCC='"+ cc + "' AND name='" + username + "'AND hashed_password='" + password + "';";
@@ -321,15 +321,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> dateInicio;
     ArrayList<String> dateFim;
 
-    //TODO: only view active and future elections
-
-    String sql1 = "SELECT ID FROM Eleicao;";
+    String sql1 = "SELECT ID FROM Eleicao WHERE active = True OR inicio >= CURDATE();";
     ID = database.submitQuery(sql1);
-    sql1 = "SELECT titulo FROM Eleicao;";
+    sql1 = "SELECT titulo FROM Eleicao WHERE active = True OR inicio >= CURDATE();";
     titulos = database.submitQuery(sql1);
-    sql1 = "SELECT inicio FROM Eleicao;";
+    sql1 = "SELECT inicio FROM Eleicao WHERE active = True OR inicio >= CURDATE();";
     dateInicio = database.submitQuery(sql1);
-    sql1 = "SELECT fim FROM Eleicao;";
+    sql1 = "SELECT fim FROM Eleicao WHERE active = True OR inicio >= CURDATE();";
     dateFim = database.submitQuery(sql1);
 
     container.add(ID);
