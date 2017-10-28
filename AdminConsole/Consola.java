@@ -157,6 +157,7 @@ public class Consola {
                         editElections();
 
                     case 7:
+                        checkVoteLocal();
 
                     case 8:
 
@@ -177,6 +178,19 @@ public class Consola {
             }
         }
         flag = false;
+    }
+
+    private void checkVoteLocal() throws RemoteException{
+        int elecID = pickElections(1);
+        Scanner sc = new Scanner(System.in);
+        int ccn;
+        System.out.printf("Introduza o número de cartão de cidadão da pessoa: ");
+        while(true) {
+            ccn = readInt();
+        }
+
+        //r.checkTable(ccn,elecID);
+
     }
 
     private void editElections() throws RemoteException{
@@ -227,7 +241,7 @@ public class Consola {
 
     private void manageTables() throws RemoteException{
         int operation;
-        Scanner sc = new Scanner(System.in);
+        boolean verify = false;
 
         do {
             System.out.println("Deseja adicionar ou remover uma mesa? ");
@@ -245,10 +259,16 @@ public class Consola {
             case 1:
                 System.out.println("Associe um departamento à mesa!");
                 int idDep = getDepOrFacId(1);
-                //r.addTableToElection(elecID, idDep);
+                verify = r.addTableToElection(elecID, idDep);
             case 2:
                 int table = pickTableFromElection(elecID);
-                //r.removeTableFromElection(elecID, table);
+                verify = r.removeTableFromElection(elecID, table);
+        }
+
+        if(verify) {
+            System.out.println("Sucesso!");
+        }else{
+            System.out.println("Erro!");
         }
     }
 
@@ -286,7 +306,7 @@ public class Consola {
     private int pickTableFromElection(int elecID) throws RemoteException{
         Scanner sc = new Scanner(System.in);
         ArrayList<String> tableList = null;
-        //tablesList = r.viewTablesFromElection(elecID);
+        //tableList = r.viewTablesFromElection(elecID);
         boolean flag = true;
         int option = 0;
         String table;
@@ -311,7 +331,7 @@ public class Consola {
     private String pickListFromElection(int elecID) throws RemoteException{
         Scanner sc = new Scanner(System.in);
         ArrayList<String> listsList = null;
-        //ListsList = r.viewListsFromElection(elecID);
+        listsList = r.viewListsFromElection(elecID);
         boolean flag = true;
         int option = 0;
         String list;
@@ -337,13 +357,14 @@ public class Consola {
         boolean flag = true;
         int option = 0;
         ArrayList<ArrayList<String>> electionsList = null;
-        if(type==1){
+        if(type==1) {
             //electionsList = r.viewCurrentElections();
-
-        }else{
+        }if(type==2){
             //electionsList = r.viewFutureElections();
-
+        }else{
+            //electionsList = r.viewPastCurrentElections();
         }
+
         ArrayList<String> idList = electionsList.get(0);
         ArrayList<String> titleList = electionsList.get(1);
 
@@ -367,7 +388,7 @@ public class Consola {
         Scanner sc = new Scanner(System.in);
         int electionType, id;
         String beginning, end, title, desc;
-        boolean verify;
+        boolean verify = false;
 
         do {
             System.out.println("Que tipo de eleição quer criar? ");
@@ -515,9 +536,9 @@ public class Consola {
         ArrayList<String> list = null;
         int option;
         if(type==1) {
-            //list = r.verDepartamentos();
+            list = r.verDepartamentos();
         }else{
-            //list = r.verFaculdades();
+            list = r.verFaculdades();
         }
         do {
             System.out.println("Qual opção?");
