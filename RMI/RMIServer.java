@@ -43,7 +43,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     
     while(true){
       try{
-        TimeUnit.SECONDS.sleep(100000);
+        TimeUnit.SECONDS.sleep(10);
       } catch (InterruptedException ie){
         ie.printStackTrace();
       }
@@ -78,12 +78,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       this.checkElectionStatus();
     } catch(ExportException ee){
 
-      this.setMainServer(false);
-      System.out.println(this.mainServer);
-      if (this.heartbeat == null){
-        this.startUDPConnection();
-      }
-      System.out.println("Backup RMIServer Starting");
+        this.setMainServer(false);
+        System.out.println(this.mainServer);
+        if (this.heartbeat == null){
+          this.startUDPConnection();
+        }
+        System.out.println("Backup RMIServer Starting");
     } catch(RemoteException re){
       System.out.println("RemoteException: " + re);
       return; 
@@ -1210,6 +1210,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
               } catch (IOException ioe){
                 System.out.println("Networking Problems");
               } catch (InterruptedException ie){
+                  RMIServer.this.heartbeat = null;
 
                 try{ Naming.unbind(RMIServer.rmiName); }
                 catch(RemoteException re){}
@@ -1273,10 +1274,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
             System.out.println("RMIServer failed \nAssuming Main Server Status");
 
             try{
+              aSocket.close();
               RMIServer.this.heartbeat = null;
               RMIServer.this.mainServer = true;
               RMIServer.this.startRMIServer();
-              aSocket.close();
               Thread.currentThread().join();
             } catch(InterruptedException ie){
               System.out.println("Thread Interrupted");
