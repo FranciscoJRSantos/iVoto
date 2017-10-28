@@ -937,17 +937,17 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     boolean toClient = true;
     ArrayList<String> aux;
-    String sql = "SELECT * FROM MesaVoto WHERE ID='" + id + "' AND active='False';";
+    String sql = "SELECT * FROM Eleicao WHERE ID='" + id + "' AND active='False';";
     aux = database.submitQuery(sql);
     if (aux.isEmpty()){
       toClient = false;
     }
     else{
       if (flag == 1){
-        sql = "UPDATE MesaVoto WHERE ID='" + id + "SET inicio='" + newdate + "';";
+        sql = "UPDATE Eleicao SET inicio='" + newdate + "' WHERE ID='" + id + "';";
       }
       else if (flag == 2){
-        sql = "UPDATE MesaVoto WHERE ID='" + id + "SET fim='" + newdate + "';";
+        sql = "UPDATE Eleicao SET fim ='" + newdate + "' WHERE ID='" + id + "';";
       }
       database.submitUpdate(sql);
     } 
