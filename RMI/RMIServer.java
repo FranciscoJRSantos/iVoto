@@ -598,8 +598,32 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   public boolean anticipatedVote(int idElec, int idUser, int vote, String pass) throws RemoteException{
     //vote antecipado. o int vote é um int da lista de listas disponiveis retornada pela "viewListsFromElection"
+    boolean toClient = false;
+    ArrayList<String> aux1;
+    ArrayList<String> aux2;
+    ArrayList<String> aux3;
+    String sql6 = "SELECT ID FROM Lista WHERE ID='" + vote + "' AND eleicao_id='" + idElec +"';";
+    aux3 = database.submitQuery(sql6);
+    if (!aux3.isEmpty()){
+      String sql1 = "UPDATE Lista SET votos = votos +1 WHERE ID='" + vote + "' AND eleicao_id='" + idElec + "';";
 
-    return true;
+      String sql3 = "SELECT hasVoted FROM User_Eleicao WHERE user_id='" + idUser + "' AND eleicao_id='" +  idElec + "';";
+      aux2 = database.submitQuery(sql3);
+      System.out.println(aux2);
+      if (!aux2.isEmpty()){
+        String sql5 = "INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id,whenVoted) VALUES('" + idUser + "'," + idElec + ",True,'" + 0 + "',NOW());";
+        database.submitUpdate(sql5);
+        database.submitUpdate(sql1);
+        toClient = true;
+      }
+      else{
+        toClient = false;
+      }
+    }
+    else{
+    }
+    return toClient;
+
   } 
 
   public boolean createList(String nome, int tipo, int eleicao_id) throws RemoteException{
