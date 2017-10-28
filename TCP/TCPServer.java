@@ -128,12 +128,12 @@ public class TCPServer {
         new AdminCommands();
 
         try {
-            System.out.println("Listening to port" + serverPort);
+            System.out.println("[STATUS] Listening to port" + serverPort);
             ServerSocket listenSocket = new ServerSocket(serverPort);
-            System.out.println("LISTEN SOCKET=" + listenSocket);
+            System.out.println("[STATUS] LISTEN SOCKET=" + listenSocket);
             while (true) {
                 Socket clientSocket = listenSocket.accept();
-                System.out.println("CLIENT_SOCKET (created at accept())=" + clientSocket);
+                System.out.println("[STATUS] CLIENT_SOCKET (created at accept())=" + clientSocket);
                 connectionCount++;
                 connectionList.add(new Connection(clientSocket, connectionCount));
             }
@@ -182,7 +182,7 @@ public class TCPServer {
     private static ArrayList<String> requestTableList() {
         while (true) {
             try {
-                return r.showTables(electionID);
+                return r.showTables(electionID).get(0);
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI showTables. Retrying connection");
                 if(!connectToRMI()) return null;

@@ -15,8 +15,6 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.util.concurrent.TimeUnit;
 
-import static javax.swing.text.html.HTML.Tag.HEAD;
-
 public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   static DatabaseConnection database = null;
@@ -103,6 +101,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   // TCP Methods
 
+  /**
+   * Função para verificar se um utilizador pode votar numa dada eleição.
+   * @param cc - Recebe o número do cartão de cidadão de um utilizador
+   * @param eleicao_id - Recebe o UniqueID da eleição onde o utilizador quer votar
+   * @return Se o utilizador poder votar na eleição, retorna o nome do utilizador. Caso contrário retorna null.
+   * @throws RemoteException Caso o RMI não consiga ser acedido é thrown uma RemoteException.
+   */
   public String checkID(int cc, int eleicao_id) throws RemoteException {
 
     String toClient = null;
@@ -189,6 +194,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return nameUser;
   }
 
+  /**
+   * Funçao que retorna os utilizadores que estão numa mesa de voto
+   * @param eleicao_id Recebe o ID da eleição onde pesquisar
+   * @param mesavoto_id Recebe o ID da mesa de voto onde pesquisar
+   * @return Uma ArrayList com ArrayLists de Strings em que o primeiro indice contem o cartao de cidadao do utilizador e o segundo indice tem o nome do utilizador
+   */
+
   public ArrayList<ArrayList<String>> showUserTable(int eleicao_id, int mesavoto_id){
 
     ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
@@ -209,11 +221,19 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
+  /**
+   * Adiciona uma mesa de voto a uma eleição
+   * @param elecID Recebe o ID da eleição para onde se quer adicionar a mesa
+   * @param idDep Recebe o ID do departamento onde vai estar a mesa
+   * @return Em caso de sucesso, isto é, se o departamento nao tiver mais nenhuma mesa de voto para aquela eleição, retorna true, caso contrario retorna false
+   * @throws RemoteException
+   */
+
   public boolean addTableToElection(int elecID, int idDep) throws RemoteException{
 
     boolean toClient = true;
     ArrayList<String> protection;
-    String protect = "SELECT * FROM MesaVoto WHERE departamento_id='" + idDep + "';";
+    String protect = "SELECT * FROM MesaVoto WHERE departamento_id='" + idDep + "' AND eleicao_id='" + elecID + "';";
     protection = database.submitQuery(protect);
 
     if (protection.isEmpty()){
@@ -227,11 +247,19 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
+  /**
+   * Remove uma mesa de voto de uma eleição
+   * @param elecID Recebe o ID da eleição onde se quer remover a mesa
+   * @param table Recebe o ID da mesa que se quer remover
+   * @return Caso a mesa exista e possa ser removida retorna true, caso contrario retorna false
+   * @throws RemoteException
+   */
+
   public boolean removeTableFromElection(int elecID, int table) throws RemoteException{
 
     boolean toClient = true;
     ArrayList<String> protection;
-    String protect = "SELECT MesaVoto WHERE='" + elecID + "' AND active = True;";
+    String protect = "SELECT MesaVoto WHERE='" + table + "' AND active = true;";
     protection = database.submitQuery(protect);
     if (protection.isEmpty()){
       String sql = "DELETE FROM MesaVoto WHERE ID='" + table + "';";
@@ -243,6 +271,15 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return toClient;
   }
+
+  /**
+   * Autentica um utilizador
+   * @param cc Recebe o numero de cartao de cidadao do eleitor
+   * @param username Recebe o username do eleitor
+   * @param password Recebe a password do eleitor
+   * @return Caso o utilizador exista e as credenciais estejam corretas retorna true, caso contrario retorna false
+   * @throws RemoteException
+   */
 
   public boolean checkLogin(int cc, String username, String password) throws RemoteException {
 
@@ -257,22 +294,46 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
-  public ArrayList<String>  listCandidates(int mesavoto_id) throws RemoteException{
+  /**
+   * Lista as mesas de voto associadas a uma eleição
+   * @param eleicao_id Recebe o ID da eleição
+   * @return Um ArrayList com o ID das mesas de voto associadas a eleiçao passada por parametro
+   * @throws RemoteException
+   */
 
-    String sql = "SELECT NAME FROM Lista WHERE mesavoto_id='" + mesavoto_id + "';";
+  public ArrayList<ArrayList<String>> showTables(int eleicao_id) throws RemoteException{
 
-    return database.submitQuery(sql);
-
-  }
-
-  public ArrayList<String> showTables(int eleicao_id) throws RemoteException{
-
+    ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
     ArrayList<String> aux;
     String sql = "SELECT ID FROM MesaVoto WHERE eleicao_id='" + eleicao_id + "';";
+    String sql1 = "SELECT departamento_id FROM MesaVoto WHERE eleicao_id='" + eleicao_id +"';";
+    String sql2;
 
     aux = database.submitQuery(sql);
-    return aux;
+    if (aux.isEmpty()){
+      return toClient = null;
+    }
+    toClient.add(aux);
+    aux = database.submitQuery(sql1);
+    sql2 = "SELECT nome FROM Departamento WHERE ID='" + aux.get(0) + "';";
+    aux = database.submitQuery(sql2);
+    if (aux.isEmpty()){
+      return toClient = null;
+    }
+    toClient.add(aux);
+
+    return toClient;
   }
+
+  /**
+   * Metodo que permite o voto
+   * @param cc Recebe o numero de cartao de cidadao de um utilizador
+   * @param lista Recebe a lista onde o utilizador quer votar
+   * @param eleicao_id Recebe o id da eleição para onde o utilizador vai votar
+   * @param mesavoto_id Recebe a mesa de voto onde o utilizador esta a votar
+   * @return Em caso de sucesso retorna a lista em que o utilizador votou como uma string. Caso contrário retorna null.
+   * @throws RemoteException
+   */
 
   public String vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException{
 
@@ -310,6 +371,21 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   // Admin Console
 
+  /**
+   * Adiciona um utilizador
+   * @param name Recebe o nome do utilizador
+   * @param Address Recebe a morada do utilizador
+   * @param phone Recebe o contacto do utilizador
+   * @param ccn Recebe o numero do cartao de cidadão do utilizador
+   * @param ccv Recebe a data de validade do cartao de cidadão do utilizador
+   * @param dep Recebe o ID do departamento onde o utilizador estuda
+   * @param fac Recebe o ID da faculdade onde o utilizador estudar
+   * @param pass Reecebe a password do utilizador
+   * @param type Recebe o tipo de utilizador que é. 1 - Estudante | 2 - Docente | 3 - Funcionário
+   * @return Retorna true em caso de sucesso e false em caso de insucesso.
+   * @throws RemoteException
+   */
+
   public boolean addPerson(String name, String Address, int phone, int ccn, String ccv, int dep, int fac, String pass, int type) throws RemoteException{
 
     boolean toClient = true;
@@ -321,6 +397,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
+  /**
+   * Lista com os utilizadores que estão presentes numa mesa de voto
+   * @param idTable Recebe o ID da mesa de voto
+   * @return Retorna uma lista com os utilizadores presentes numa mesa de voto
+   * @throws RemoteException
+   */
   public ArrayList<String> tableMembers(int idTable) throws RemoteException{
 
     ArrayList<String> aux;
@@ -330,13 +412,22 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return aux;
   }
 
+  /**
+   * Mostra a mesa de voto onde um utilizador votou
+   * @param idUser Recebe o ID do utilizador
+   * @param idElec Recebe o ID da eleicao
+   * @return Retorna o ID da mesa de voto onde o utilizador votou
+   * @throws RemoteException
+   */
   public int checkTable(int idUser, int idElec) throws RemoteException{
 
     int mesa;
-    ArrayList<String> aux;
+    ArrayList<String> aux,id;
     //TODO: Get ID from CC
 
-    String sql = "SELECT mesavoto_id FROM User_Eleicao WHERE user_id='" + idUser + "' AND eleicao_id='" + idElec + "'";
+    String user_id = "SELECT ID FROM User WHERE numeroCC='" + idUser +  "';";
+    id = database.submitQuery(user_id);
+    String sql = "SELECT mesavoto_id FROM User_Eleicao WHERE user_id='" + id.get(0) + "' AND eleicao_id='" + idElec + "'";
     aux = database.submitQuery(sql);
     if (aux.isEmpty()){
       mesa = -1;
@@ -347,7 +438,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return mesa;
 
-  } 
+  }
+
+  /**
+   * Mostra as eleiçoes que estão neste momento a decorrer
+   * @return Retorna uma ArrayList de ArrayLists de strings em que o primeiro indice contem os IDs das eleiçoes, o segundo o titulo da eleição, o terceiro a data de inicio da eleição e em quarto a data de fim da eleição
+   * @throws RemoteException
+   */
 
   public ArrayList<ArrayList<String>> viewCurrentElections() throws RemoteException{
 
@@ -357,13 +454,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> dateInicio;
     ArrayList<String> dateFim;
 
-    String sql1 = "SELECT ID FROM Eleicao WHERE active = True OR inicio >= CURDATE();";
+    String sql1 = "SELECT ID FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
     ID = database.submitQuery(sql1);
-    sql1 = "SELECT titulo FROM Eleicao WHERE active = True OR inicio >= CURDATE();";
+    sql1 = "SELECT titulo FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
     titulos = database.submitQuery(sql1);
-    sql1 = "SELECT inicio FROM Eleicao WHERE active = True OR inicio >= CURDATE();";
+    sql1 = "SELECT inicio FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
     dateInicio = database.submitQuery(sql1);
-    sql1 = "SELECT fim FROM Eleicao WHERE active = True OR inicio >= CURDATE();";
+    sql1 = "SELECT fim FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
     dateFim = database.submitQuery(sql1);
 
     container.add(ID);
@@ -373,6 +470,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return container;
   }
+
+  /**
+   * Mostra eleições passadas ou a decorrer
+   * @return  Retorna uma ArrayList de ArrayLists de strings em que o primeiro indice contem os IDs das eleiçoes, o segundo o titulo da eleição, o terceiro a data de inicio da eleição e em quarto a data de fim da eleição
+   * @throws RemoteException
+   */
 
   public ArrayList<ArrayList<String>> viewPastCurrentElections() throws RemoteException{
 
@@ -399,6 +502,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return container;
   }
 
+  /**
+   * Mostra eleições futura
+   * @return  Retorna uma ArrayList de ArrayLists de strings em que o primeiro indice contem os IDs das eleiçoes, o segundo o titulo da eleição, o terceiro a data de inicio da eleição e em quarto a data de fim da eleição
+   * @throws RemoteException
+   */
+
   public ArrayList<ArrayList<String>> viewFutureElections() throws RemoteException{
 
     ArrayList<ArrayList<String>> container = new ArrayList<>();
@@ -407,13 +516,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> dateInicio;
     ArrayList<String> dateFim;
 
-    String sql1 = "SELECT ID FROM Eleicao WHERE inicio > CURDATE();";
+    String sql1 = "SELECT ID FROM Eleicao WHERE inicio > NOW() AND fim > NOW();";
     ID = database.submitQuery(sql1);
-    sql1 = "SELECT titulo FROM Eleicao WHERE inicio > CURDATE();";
+    sql1 = "SELECT titulo FROM Eleicao WHERE inicio > NOW() AND fim > NOW();";
     titulos = database.submitQuery(sql1);
-    sql1 = "SELECT inicio FROM Eleicao WHERE inicio > CURDATE();";
+    sql1 = "SELECT inicio FROM Eleicao WHERE inicio > NOW() AND fim > NOW();";
     dateInicio = database.submitQuery(sql1);
-    sql1 = "SELECT fim FROM Eleicao WHERE inicio > CURDATE();";
+    sql1 = "SELECT fim FROM Eleicao WHERE inicio > NOW() AND fim > NOW();";
     dateFim = database.submitQuery(sql1);
 
     container.add(ID);
@@ -423,6 +532,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return container;
   }
+
+  /**
+   * Mostra eleições passadas
+   * @return  Retorna uma ArrayList de ArrayLists de strings em que o primeiro indice contem os IDs das eleiçoes, o segundo o titulo da eleição, o terceiro a data de inicio da eleição e em quarto a data de fim da eleição
+   * @throws RemoteException
+   */
 
   public ArrayList<ArrayList<String>> viewPastElections() throws RemoteException{
 
@@ -449,6 +564,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return container;
   }
 
+  /**
+   * Mostra os Departamentos que estão na base de dados
+   * @return Retorna uma ArrayList de ArrayLists de Strings em que o primeiro indice contem o nome do departamento e o segundo contem o id
+   * @throws RemoteException
+   */
+
   public ArrayList<ArrayList<String>> verDepartamentos() throws RemoteException{
 
     ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
@@ -464,6 +585,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
+  /**
+   * Mostra as Faculdades que estão na base de dados
+   * @return Retorna uma ArrayList de ArrayLists de Strings em que o primeiro indice contem o nome do departamento e o segundo contem o id
+   * @throws RemoteException
+   */
+
   public ArrayList<ArrayList<String>> verFaculdades() throws RemoteException{
 
     ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
@@ -478,6 +605,14 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     toClient.add(Nomes);
     return toClient;
   }
+
+  /**
+   * Remove um departamento ou uma faculdade
+   * @param dep Recebe o ID do departamento ou da faculdade
+   * @param flag Recebe uma flag para saber se deve remover o departamento ou a faculdade, se a flag for 1 remove o departamento, se for 2 remove a faculdade
+   * @return Retorna true em caso de sucesso da remoçao e false em caso de insucesso
+   * @throws RemoteException
+   */
 
   public boolean rmDepFac(int dep, int flag) throws RemoteException{
 
@@ -496,6 +631,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
+  /**
+   * Mostra todas as listas associadas a uma eleição
+   * @param id Recebe o ID da eleição
+   * @return Retorna uma ArrayList com os nomes das listas associadas à eleição
+   * @throws RemoteException
+   */
+
   public ArrayList<String> viewListsFromElection(int id) throws RemoteException{
 
     ArrayList<String> toClient;
@@ -505,14 +647,31 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
+  /**
+   * Mostra as listas associadas a uma eleição que não são a lista em branco e a lista null
+   * @param id Recebe o ID da eleição
+   * @return Retorna uma ArrayList com os nomes das listas da eleição passada por parametro
+   * @throws RemoteException
+   */
+
   public ArrayList<String> printListsFromElection(int id) throws RemoteException{
 
     ArrayList<String> toClient;
-    String sql = "SELECT nome FROM Lista WHERE eleicao_id='" + id + "' OR tipo!=0;";
+    String sql = "SELECT nome FROM Lista WHERE eleicao_id='" + id + "' AND tipo!=0;";
 
     toClient = database.submitQuery(sql);
     return toClient;
   }
+
+  /**
+   * Adiciona uma lista ou remove uma lista de um eleição
+   * @param idElec Recebe o ID da eleiçao a qual pretendemos adicionar a lista
+   * @param listType Recebe o tipo de lista a criar. 1 - Estudantes | 2 - Docentes | 3 - Funcionários
+   * @param List Recebe o nome a dar à lista a ser criada, ou o nome da lista a ser removida
+   * @param flag Recebe a flag que determina se vamos remover ou adicionar uma lista. Se a flag for 1 adiciona uma lista, se for 2 remove uma lista
+   * @return Retorna true no caso da ação ser bem sucedida ou false no caso de ter falhado
+   * @throws RemoteException
+   */
 
   public boolean manageList(int idElec,int listType, String List, int flag) throws RemoteException{
     //flag 1 - add list, flag 2 - remove list
@@ -525,11 +684,21 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       database.submitUpdate(sql);
     }
     else if(flag ==2){
-      sql = "REMOVE FROM Lista WHERE ID='" + idElec + "';";
+
+      sql = "DELETE FROM Lista WHERE eleicao_id='" + idElec + "' AND nome='" +List + "';";
       database.submitUpdate(sql);
     }
     return toClient;
   }
+
+  /**
+   * Adiciona departamento ou faculdade
+   * @param faculdade_id Recebe o ID da faculdade caso seja para adicionar um departamento
+   * @param newName Recebe o nome da infraestrutura a ser criada
+   * @param flag Recebe a flag que distingue a criação de um departamento de uma faculdade. Se a flag for 1 cria um departamento se for 2 cria uma faculdade
+   * @return Retorna true em caso de sucesso ou false em caso de insucesso
+   * @throws RemoteException
+   */
 
   public boolean addDepFac(int faculdade_id, String newName, int flag) throws RemoteException{
     //add departamento / faculdade. flag 1 - dep, flag 2 - fac 
@@ -547,18 +716,36 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
+  /**
+   * Função que altera um utilizador que esta numa mesa
+   * @param idTable Recebe o ID da mesa de voto
+   * @param idUser Recebe o ID do utilizador que esta na mesa atualmente
+   * @param idNewUser Recebe o ID do utilizador que vai substituir
+   * @return Retorna true em caso de sucesso, e false em caso de insucesso
+   * @throws RemoteException
+   */
+
   public boolean manageTable(int idTable, int idUser, int idNewUser) throws RemoteException{
 
     //mudar a pessoa que está na mesa 
 
     boolean toClient = true;
-    String sql = "UPDATE User SET mesavoto_id = NULL WHERE mesavoto_id='" + idTable + "';";
+    String sql = "UPDATE User SET mesavoto_id = NULL WHERE mesavoto_id='" + idTable + "AND ID='" + idUser +"';";
     database.submitUpdate(sql);
     sql = "UPDATE User SET mesavoto_id='" + idTable + "' WHERE ID='" + idNewUser + "';";
     database.submitUpdate(sql);
 
     return toClient;
   }
+
+  /**
+   * Funçao que permite editar as caracteristicas de um utilizador
+   * @param idUser Recebe o ID da pessoa a editar
+   * @param newInfo Recebe a informação a editar como String
+   * @param flag Recebe uma flag para saber a caracteristica a alterar. 1 - nome | 2 - morada | 3 - contacto | 4 - numero do cartao de cidadao | 5 - validade do cartao de cidadao | 6 - departamento onde estuda | 7 - faculdade onde estuda
+   * @return Retorna true em caso de sucesso e false em caso de insucesso
+   * @throws RemoteException
+   */
 
   public boolean editPerson(int idUser, String newInfo, int flag) throws RemoteException{
     //edita a info de uma pessoa, manda a newinfo sempre como string e depois cabe ao server passar de string para int caso seja necessario. flag 1 - name, flag 2 - Address, flag 3 - phone, flag 4 - ccn, flag 5 - ccv, flag 6 - dep, flag 7 - pass
@@ -568,29 +755,29 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     switch (flag){
       case 1:
-        sql = "UPDATE User SET name='" + newInfo + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET name='" + newInfo + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 2:
-        sql = "UPDATE User SET morada='" + newInfo + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET morada='" + newInfo + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 3:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User SET contacto='" + newInfo + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET contacto='" + newInfo + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 4:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User SET numeroCC='" + aux + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET numeroCC='" + aux + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 5:
-        sql = "UPDATE User SET validadeCC='" + newInfo + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET validadeCC='" + newInfo + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 6:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User SET departamento_id='" + aux + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET departamento_id='" + aux + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 7:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User SET faculdade_id='" + aux + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET faculdade_id='" + aux + "' WHERE numeroCC='" + idUser + "';";
         break;
       default:
         break;
@@ -602,22 +789,25 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return true;
   }   
 
-  public boolean anticipatedVote(int idElec, int idUser, int vote, String pass) throws RemoteException{
+  public boolean anticipatedVote(int idElec, int cc, String vote, String pass) throws RemoteException{
     //vote antecipado. o int vote é um int da lista de listas disponiveis retornada pela "viewListsFromElection"
     boolean toClient = false;
     ArrayList<String> aux1;
     ArrayList<String> aux2;
     ArrayList<String> aux3;
-    String sql6 = "SELECT ID FROM Lista WHERE ID='" + vote + "' AND eleicao_id='" + idElec +"';";
+    ArrayList<String> idUser;
+    String sql6 = "SELECT ID FROM Lista WHERE nome='" + vote + "' AND eleicao_id='" + idElec +"';";
+    String sql7 = "SELECT ID FROM User WHERE numeroCC='" + cc + "';";
+    idUser = database.submitQuery(sql7);
     aux3 = database.submitQuery(sql6);
     if (!aux3.isEmpty()){
-      String sql1 = "UPDATE Lista SET votos = votos +1 WHERE ID='" + vote + "' AND eleicao_id='" + idElec + "';";
+      String sql1 = "UPDATE Lista SET votos = votos +1 WHERE nome='" + vote + "' AND eleicao_id='" + idElec + "';";
 
-      String sql3 = "SELECT hasVoted FROM User_Eleicao WHERE user_id='" + idUser + "' AND eleicao_id='" +  idElec + "';";
+      String sql3 = "SELECT hasVoted FROM User_Eleicao WHERE user_id='" + idUser.get(0) + "' AND eleicao_id='" +  idElec + "';";
       aux2 = database.submitQuery(sql3);
       System.out.println(aux2);
-      if (!aux2.isEmpty()){
-        String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id,whenVoted) VALUES('" + idUser + "'," + idElec + ",True,'" + 0 + "',NOW());";
+      if (aux2.isEmpty()){
+        String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id,whenVoted) VALUES('" + idUser.get(0) + "'," + idElec + ",true,null,NOW());";
         database.submitUpdate(sql5);
         database.submitUpdate(sql1);
         toClient = true;
@@ -627,6 +817,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       }
     }
     else{
+      toClient = false;
     }
     return toClient;
 
@@ -820,6 +1011,20 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return true;
   }
 
+  public boolean addToTable(int idTable, int numeroCC) throws RemoteException{
+
+    String aux = "SELECT ID FROM User WHERE numeroCC='" + numeroCC + "';";
+    ArrayList<String> user_id = database.submitQuery(aux);
+    if (user_id.isEmpty()){
+      return false;
+    }
+    String sql = "UPDATE User SET mesavoto_id='" + idTable + "' WHERE ID='" + user_id.get(0) + "';";
+    database.submitUpdate(sql);
+
+    return true;
+  }
+
+
   class UDPConnection extends Thread {
 
     int mainUDP, secUDP;
@@ -880,10 +1085,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
                 i=0;
 
               } catch (SocketTimeoutException ste){
-                System.out.println("SocketTimeoutException: " + ste.getMessage());
+                System.out.println("Backup server isn't responding");
                 i++;
               } catch (IOException ioe){
-                System.out.println("Problemas de rede");
+                System.out.println("Networking Problems");
               } catch (InterruptedException ie){
 
                 try{ Naming.unbind(RMIServer.rmiName); }
@@ -933,12 +1138,14 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
                 i=0;
 
               } catch (SocketTimeoutException ste){
-                System.out.println("SocketTimeoutException: " + ste.getMessage());
+                System.out.println("Main RMI Servir not responding");
                 i++;
               } catch (IOException ioe){
-                System.out.println("Problemas de rede");
+                System.out.println("Network Problems");
               } catch (InterruptedException ie){
 
+              } catch (Exception e){
+                e.printStackTrace();
               }
 
             }while(i < retries);
@@ -952,7 +1159,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
               aSocket.close();
               Thread.currentThread().join();
             } catch(InterruptedException ie){
-
+              System.out.println("Thread Interrupted");
+            } catch(Exception e){
+              e.printStackTrace();
             }
 
           }
