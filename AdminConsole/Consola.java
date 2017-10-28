@@ -1,7 +1,7 @@
 //TODO: horas nas eleiçoes
-//TODO: mudar nomes
-//TODO: next();
 //TODO: datas proteção
+//TODO: proteget inputs contra PIPES (|)
+
 
 import java.rmi.RemoteException;
 import java.text.ParseException;
