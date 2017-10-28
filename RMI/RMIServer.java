@@ -170,6 +170,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return nameUser;
   }
 
+
+
   public ArrayList<ArrayList<String>> showUserTable(int eleicao_id, int mesavoto_id){
 
     ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
@@ -351,6 +353,81 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return container;
   }
 
+  public ArrayList<ArrayList<String>> viewFutureElections() throws RemoteException{
+
+    ArrayList<ArrayList<String>> container = new ArrayList<>();
+    ArrayList<String> ID;
+    ArrayList<String> titulos;
+    ArrayList<String> dateInicio;
+    ArrayList<String> dateFim;
+
+    String sql1 = "SELECT ID FROM Eleicao WHERE inicio > CURDATE();";
+    ID = database.submitQuery(sql1);
+    sql1 = "SELECT titulo FROM Eleicao WHERE OR inicio > CURDATE();";
+    titulos = database.submitQuery(sql1);
+    sql1 = "SELECT inicio FROM Eleicao WHERE OR inicio > CURDATE();";
+    dateInicio = database.submitQuery(sql1);
+    sql1 = "SELECT fim FROM Eleicao WHERE OR inicio > CURDATE();";
+    dateFim = database.submitQuery(sql1);
+
+    container.add(ID);
+    container.add(titulos);
+    container.add(dateInicio);
+    container.add(dateFim);
+
+    return container;
+  }
+
+  public ArrayList<ArrayList<String>> viewPastElections() throws RemoteException{
+
+    ArrayList<ArrayList<String>> container = new ArrayList<>();
+    ArrayList<String> ID;
+    ArrayList<String> titulos;
+    ArrayList<String> dateInicio;
+    ArrayList<String> dateFim;
+
+    String sql1 = "SELECT ID FROM Eleicao WHERE inicio < CURDATE();";
+    ID = database.submitQuery(sql1);
+    sql1 = "SELECT titulo FROM Eleicao WHERE inicio < CURDATE();";
+    titulos = database.submitQuery(sql1);
+    sql1 = "SELECT inicio FROM Eleicao WHERE inicio < CURDATE();";
+    dateInicio = database.submitQuery(sql1);
+    sql1 = "SELECT fim FROM Eleicao WHERE inicio < CURDATE();";
+    dateFim = database.submitQuery(sql1);
+
+    container.add(ID);
+    container.add(titulos);
+    container.add(dateInicio);
+    container.add(dateFim);
+
+    return container;
+  }
+
+  public ArrayList<ArrayList<String>> viewPastCurrentElections() throws RemoteException{
+
+    ArrayList<ArrayList<String>> container = new ArrayList<>();
+    ArrayList<String> ID;
+    ArrayList<String> titulos;
+    ArrayList<String> dateInicio;
+    ArrayList<String> dateFim;
+
+    String sql1 = "SELECT ID FROM Eleicao WHERE active = active OR inicio < CURDATE();";
+    ID = database.submitQuery(sql1);
+    sql1 = "SELECT titulo FROM Eleicao WHERE active = active OR inicio < CURDATE();";
+    titulos = database.submitQuery(sql1);
+    sql1 = "SELECT inicio FROM Eleicao WHERE active = active OR inicio < CURDATE();";
+    dateInicio = database.submitQuery(sql1);
+    sql1 = "SELECT fim FROM Eleicao WHERE active = active OR inicio < CURDATE();";
+    dateFim = database.submitQuery(sql1);
+
+    container.add(ID);
+    container.add(titulos);
+    container.add(dateInicio);
+    container.add(dateFim);
+
+    return container;
+  }
+
   public ArrayList<String> verDepartamentos() throws RemoteException{
 
     String sql1 = "SELECT ID AND nome FROM Departamento;";
@@ -491,10 +568,20 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return true;
   }
 
-  public ArrayList<String> checkResults(int idElec) throws RemoteException{
+  public ArrayList<ArrayList<<String>> checkResults(int idElec) throws RemoteException{
     //recebe uma lista com [[lista,nº de votos],...]. return [[null,null]] em caso de insucesso
-    ArrayList<String> aux;
-    String sql = "SELECT nome,votos FROM Lista WHERE eleicao_id='" + idElec +"';";
+    ArrayList<ArrayList<String>> toClient;
+    ArrayList<String> listaNome;
+    ArrayList<String> listaVotos;
+
+    String sqlNome = "SELECT nome FROM Lista WHERE eleicao_id='" + idElec +"' ORDER BY votos DESC;";
+    String sqlVotos = "SELECT votos FROM Lista WHERE eleicao_id'" + idElec +"' ORDER BY votos DESC;";
+
+    listaNome = database.submitQuery(sqlNome);
+    listaVotos = database.submitQuery(sqlVotos);
+
+    toClient.add(listaNome);
+    toClient.add(listaVotos);
 
     return database.submitQuery(sql);
   }
@@ -532,7 +619,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   } 
 
-  public boolean changeElectionsDates(int id, java.sql.Date newdate, int flag) throws RemoteException{
+  public boolean changeElectionsDates(int id, java.sql.Date newdate, in
+    t flag) throws RemoteException{
 
     boolean toClient = true;
     ArrayList<String> aux;
