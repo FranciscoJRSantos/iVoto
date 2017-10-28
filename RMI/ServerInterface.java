@@ -6,7 +6,6 @@ public interface ServerInterface extends Remote{
     // TCP
     public String checkID(int cc, int eleicao_id) throws RemoteException;
     public boolean checkLogin(int cc, String username, String password) throws RemoteException;     //recebe CC, username, password, checka se bate certo na base de dados
-    public ArrayList<String>  listCandidates(int mesavoto_id) throws RemoteException;
     public String vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException;
 
     // Admin Console - todas as boolean retornam true em caso de sucesso e false em caso de insucesso
@@ -26,14 +25,14 @@ public interface ServerInterface extends Remote{
     public java.util.Date showHour(int idUser, int idElec) throws RemoteException; //saber quando uma pessoa votou, retorna algo que indique erro :) nao sei :) fds :)
     public int TableInfo(int idTable, int idElec) throws RemoteException; //realtime info sobre o estado das mesas (return -1) if down, e numero de votos feitos naquela mesa (return n)
     public ArrayList<ArrayList<String>> checkResults(int idElec) throws RemoteException;
-    public boolean anticipatedVote(int idElec, int idUser, int vote, String pass) throws RemoteException; //vote antecipado. o int vote é um int da lista de listas disponiveis retornada pela "viewListsFromElection"
+    public boolean anticipatedVote(int idElec, int idUser, String vote, String pass) throws RemoteException; //vote antecipado. o int vote é um int da lista de listas disponiveis retornada pela "viewListsFromElection"
     public boolean editPerson(int idUser, String newInfo, int flag) throws RemoteException; //edita a info de uma pessoa, manda a newinfo sempre como string e depois cabe ao server passar de string para int caso seja necessario. flag 1 - name, flag 2 - Address, flag 3 - phone, flag 4 - ccn, flag 5 - ccv, flag 6 - dep, flag 7 - pass
     public ArrayList<String> tableMembers(int idTable) throws RemoteException; //retorna a lista de pessoas que estão na mesa
     public boolean manageTable(int idTable, int idUser, int idNewUser) throws RemoteException; //mudar a pessoa que está na mesa
     public ArrayList<ArrayList<String>> verFaculdades() throws RemoteException;
     public ArrayList<ArrayList<String>> verDepartamentos() throws RemoteException;
     public boolean createList(String nome, int tipo,int eleicao_id) throws RemoteException;
-    public ArrayList<String> showTables(int eleicao_id) throws RemoteException;
+    public ArrayList<ArrayList<String>> showTables(int eleicao_id) throws RemoteException;
     public ArrayList<ArrayList<String>> showUserTable(int eleicao_id, int mesavoto_id) throws RemoteException;
     public boolean addTableToElection(int elecID, int idDep) throws RemoteException;
     public boolean removeTableFromElection(int elecID, int table) throws RemoteException;

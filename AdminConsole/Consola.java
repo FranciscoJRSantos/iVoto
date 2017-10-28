@@ -285,7 +285,7 @@ public class Consola {
             return;
         }
 
-        if(r.anticipatedVote(elecId, ccn, vote, pass)){
+        if(r.anticipatedVote(elecId, ccn, voto, pass)){
             System.out.println("Sucesso!");
         }else{
             System.out.println("Erro!");
@@ -312,7 +312,7 @@ public class Consola {
     private void checkVoteLocal() throws RemoteException{
         int elecID = pickElections(4);
         if(elecID==-1){
-            System.out.println("Erro!");
+            System.out.println("Errooooo!");
             return;
         }
 
@@ -321,7 +321,7 @@ public class Consola {
         ccn = getPhoneOrCCN(2);
 
         if(r.checkTable(ccn,elecID)==-1){
-            System.out.println("Erro!");
+            System.out.println("Eeeeerro!");
         }else{
             System.out.println("Votou na mesa " + r.checkTable(ccn,elecID));
         }
@@ -469,8 +469,8 @@ public class Consola {
             }
 
             option = readInt();
-            if(option <= 0 || option > tableIDList.size()-1){
-                System.out.println("Opção Inválida.");
+            if(option <= 0 || option > tableIDList.size()){
+                System.out.println("Insira um valor válido, çá xabor.\n");
                 flag = true;
             }
         }
@@ -536,30 +536,31 @@ public class Consola {
     }
 
     private int pickTableFromElection(int elecID) throws RemoteException{
-        ArrayList<String> tableList;
+        ArrayList<ArrayList<String>> tableList;
         tableList = r.showTables(elecID);
         boolean flag = true;
         int option = 0;
         String table;
 
-        if(tableList.size()==0){
+        if(tableList==null){
             System.out.println("Não existe nenhuma mesa.");
             return -1;
         }
         while(flag) {
             flag=false;
             System.out.println("Qual mesa de voto?");
-            for (int i = 0; i < tableList.size(); i++) {
-                System.out.println( i+1 + " -> " + tableList.get(i));
+            for (int i = 0; i < tableList.get(0).size(); i++) {
+                System.out.println( i+1 + " -> " + tableList.get(0).get(i) + " - " + tableList.get(1).get(i));
             }
+            System.out.printf("Opção: ");
             option = readInt();
-            if(option <= 0 || option > tableList.size()-1){
-                System.out.println("Opção Inválida.");
+            if(option <= 0 || option > tableList.get(0).size()){
+                System.out.println("Insira um valor válido, çá xabor.\n");
                 flag = true;
             }
         }
 
-        return toInt(tableList.get(option-1));
+        return toInt(tableList.get(0).get(option-1));
     }
 
     private String pickListFromElection(int elecID, int type) throws RemoteException{
@@ -586,7 +587,8 @@ public class Consola {
             }
 
             option = readInt();
-            if(option<=0 || option > listsList.size()-1){
+            if(option<=0 || option > listsList.size()){
+                System.out.println("Insira um valor válido, çá xabor.\n");
                 flag = true;
             }
         }
@@ -597,17 +599,21 @@ public class Consola {
     private int pickElections(int type) throws RemoteException{
         boolean flag = true;
         int option = 0;
-        ArrayList<ArrayList<String>> electionsList;
-        if(type==1) {
-            electionsList = r.viewCurrentElections();
-        }if(type==2){
-            electionsList = r.viewFutureElections();
-
-        }if(type==3){
-            electionsList= r.viewPastElections();
-
-        }else{
-            electionsList = r.viewPastCurrentElections();
+        ArrayList<ArrayList<String>> electionsList =null;
+        switch (type) {
+            case 1:
+                electionsList = r.viewCurrentElections();
+                break;
+            case 2:
+                electionsList = r.viewFutureElections();
+                System.out.println(electionsList);
+                break;
+            case 3:
+                electionsList= r.viewPastElections();
+                break;
+            case 4:
+                electionsList = r.viewPastCurrentElections();
+                break;
         }
 
         ArrayList<String> idList = electionsList.get(0);
@@ -626,7 +632,8 @@ public class Consola {
             }
             System.out.printf("Opção: ");
             option = readInt();
-            if(option<=0 || option > idList.size()-1){
+            if(option<=0 || option > idList.size()){
+                System.out.println("Insira um valor válido, çá xabor.\n");
                 flag = true;
             }
         }
@@ -867,10 +874,10 @@ public class Consola {
 
             System.out.printf("Opção: ");
             option = readInt();
-            if (option <= 0 || option > listId.size()-1) {
+            if (option <= 0 || option > listId.size()) {
                 System.out.println("Insira um valor válido, çá xabor.\n");
             }
-        } while (option <= 0 || option > listId.size()-1);
+        } while (option <= 0 || option > listId.size());
 
         return toInt(listId.get(option-1));
     }

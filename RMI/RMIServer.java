@@ -233,7 +233,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     boolean toClient = true;
     ArrayList<String> protection;
-    String protect = "SELECT * FROM MesaVoto WHERE departamento_id='" + idDep + "';";
+    String protect = "SELECT * FROM MesaVoto WHERE departamento_id='" + idDep + "' AND eleicao_id='" + elecID + "';";
     protection = database.submitQuery(protect);
 
     if (protection.isEmpty()){
@@ -259,7 +259,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     boolean toClient = true;
     ArrayList<String> protection;
-    String protect = "SELECT MesaVoto WHERE='" + elecID + "' AND active = True;";
+    String protect = "SELECT MesaVoto WHERE='" + table + "' AND active = true;";
     protection = database.submitQuery(protect);
     if (protection.isEmpty()){
       String sql = "DELETE FROM MesaVoto WHERE ID='" + table + "';";
@@ -301,13 +301,28 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
    * @throws RemoteException
    */
 
-  public ArrayList<String> showTables(int eleicao_id) throws RemoteException{
+  public ArrayList<ArrayList<String>> showTables(int eleicao_id) throws RemoteException{
 
+    ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
     ArrayList<String> aux;
     String sql = "SELECT ID FROM MesaVoto WHERE eleicao_id='" + eleicao_id + "';";
+    String sql1 = "SELECT departamento_id FROM MesaVoto WHERE eleicao_id='" + eleicao_id +"';";
+    String sql2;
 
     aux = database.submitQuery(sql);
-    return aux;
+    if (aux.isEmpty()){
+      return toClient = null;
+    }
+    toClient.add(aux);
+    aux = database.submitQuery(sql1);
+    sql2 = "SELECT nome FROM Departamento WHERE ID='" + aux.get(0) + "';";
+    aux = database.submitQuery(sql2);
+    if (aux.isEmpty()){
+      return toClient = null;
+    }
+    toClient.add(aux);
+
+    return toClient;
   }
 
   /**
@@ -407,10 +422,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public int checkTable(int idUser, int idElec) throws RemoteException{
 
     int mesa;
-    ArrayList<String> aux;
+    ArrayList<String> aux,id;
     //TODO: Get ID from CC
 
-    String sql = "SELECT mesavoto_id FROM User_Eleicao WHERE user_id='" + idUser + "' AND eleicao_id='" + idElec + "'";
+    String user_id = "SELECT ID FROM User WHERE numeroCC='" + idUser +  "';";
+    id = database.submitQuery(user_id);
+    String sql = "SELECT mesavoto_id FROM User_Eleicao WHERE user_id='" + id.get(0) + "' AND eleicao_id='" + idElec + "'";
     aux = database.submitQuery(sql);
     if (aux.isEmpty()){
       mesa = -1;
@@ -499,13 +516,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> dateInicio;
     ArrayList<String> dateFim;
 
-    String sql1 = "SELECT ID FROM Eleicao WHERE inicio > CURDATE();";
+    String sql1 = "SELECT ID FROM Eleicao WHERE inicio > NOW() AND fim > NOW();";
     ID = database.submitQuery(sql1);
-    sql1 = "SELECT titulo FROM Eleicao WHERE inicio > CURDATE();";
+    sql1 = "SELECT titulo FROM Eleicao WHERE inicio > NOW() AND fim > NOW();";
     titulos = database.submitQuery(sql1);
-    sql1 = "SELECT inicio FROM Eleicao WHERE inicio > CURDATE();";
+    sql1 = "SELECT inicio FROM Eleicao WHERE inicio > NOW() AND fim > NOW();";
     dateInicio = database.submitQuery(sql1);
-    sql1 = "SELECT fim FROM Eleicao WHERE inicio > CURDATE();";
+    sql1 = "SELECT fim FROM Eleicao WHERE inicio > NOW() AND fim > NOW();";
     dateFim = database.submitQuery(sql1);
 
     container.add(ID);
@@ -668,7 +685,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     }
     else if(flag ==2){
 
-      sql = "REMOVE FROM Lista WHERE ID='" + idElec + "' AND nome='" +List + "';";
+      sql = "DELETE FROM Lista WHERE eleicao_id='" + idElec + "' AND nome='" +List + "';";
       database.submitUpdate(sql);
     }
     return toClient;
