@@ -684,7 +684,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return true;
   }
 
-  public boolean criaEleiçãoNE(java.sql.Date beginning, java.sql.Date end, String title, String description, int dep) throws RemoteException{
+  public boolean criaEleiçãoNE(String beginning, String end, String title, String description, int dep) throws RemoteException{
 
     //cria eleição Nucleo de estudantes. . As eleições para núcleo de estudantes decorrem num único departamento e podem votar apenas os estudantes desse departamento.
     int eleicao_id;
@@ -704,7 +704,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
-  public boolean criaEleiçãoCG(java.sql.Date beginning, java.sql.Date end, String title, String description) throws RemoteException{
+  public boolean criaEleiçãoCG(String beginning, String end, String title, String description) throws RemoteException{
 
     // os estudantes votam apenas nas listas de estudantes, os docentes votam apenas nas listas de docentes, e os funcionários votam apenas nas listas de funcionários.
     String sql1;
@@ -719,7 +719,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
-  public boolean criaEleiçãoDF(java.sql.Date beginning, java.sql.Date end, String title, String description, int idFac) throws RemoteException{
+  public boolean criaEleiçãoDF(String beginning, String end, String title, String description, int idFac) throws RemoteException{
     //cria eleição para a direção da faculdade
     int eleicao_id;
     ArrayList<String> needed;
@@ -736,7 +736,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   }
 
 
-  public boolean criaEleiçãoDD(java.sql.Date beginning, java.sql.Date end, String title, String description, int idDep) throws RemoteException{
+  public boolean criaEleiçãoDD(String beginning, String end, String title, String description, int idDep) throws RemoteException{
 
     //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
     int eleicao_id;

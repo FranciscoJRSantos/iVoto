@@ -1,5 +1,6 @@
 import java.rmi.*;
 import java.util.*;
+import java.sql.Date;
 
 public interface ServerInterface extends Remote{
     public boolean isConnected() throws RemoteException;
@@ -38,4 +39,7 @@ public interface ServerInterface extends Remote{
     public ArrayList<ArrayList<String>> showUserTable(int eleicao_id, int mesavoto_id) throws RemoteException;
     public boolean addTableToElection(int elecID, int idDep) throws RemoteException;
     public boolean removeTableFromElection(int elecID, int table) throws RemoteException;
+    public ArrayList<ArrayList<String>> viewFutureElections() throws RemoteException;
+    public ArrayList<ArrayList<String>> viewPastElections() throws RemoteException;
+    public ArrayList<ArrayList<String>> viewPastCurrentElections() throws RemoteException;
 }
