@@ -28,10 +28,11 @@ public class TCPServer {
         serverPort = c.getTCPPort();
         rmiName = c.getRMIName();
 
-        connectToRMI();
+        while (!connectToRMI());
 
         while(true) {
             ArrayList<ArrayList<String>> electionData = requestElectionsList();
+            if(electionData==null) continue;
             ArrayList<String> electionIDList = electionData.get(0);
             ArrayList<String> electionNameList = electionData.get(1);
             if (electionIDList.size() == 0){
@@ -60,6 +61,7 @@ public class TCPServer {
 
         while (true) {
             ArrayList<String> tableIDList = requestTableList();
+            if(tableIDList==null) continue;
             if (tableIDList.size()==0){
                 System.out.println("No voting tables available for this election");
                 enterToContinue();
@@ -85,6 +87,7 @@ public class TCPServer {
 
         while (true) {
             ArrayList<ArrayList<String>> staffData = requestTableStaff();
+            if(staffData==null) continue;
             ArrayList<String> staffCCList = staffData.get(0);
             ArrayList<String> staffNameList = staffData.get(1);
             if (staffCCList.size()==0){
@@ -110,7 +113,7 @@ public class TCPServer {
                         System.out.println("Login successful");
                         break;
                     } else {
-                        System.out.println("Wrong password!");
+                        System.out.println("Login failed!");
                         enterToContinue();
                     }
                 } else {
@@ -138,17 +141,17 @@ public class TCPServer {
         }
     }
 
-    private static void connectToRMI() {
+    private static boolean connectToRMI() {
         long timestamp = System.currentTimeMillis();
         boolean failed = false;
         while (true) {
             try {
                 r = (ServerInterface) Naming.lookup(rmiName);
-                break;
+                return true;
             } catch (NotBoundException | MalformedURLException | RemoteException e) {
                 if (System.currentTimeMillis() - timestamp > 30000) {
-                    System.out.println("[Warning] Couldn't connect to RMI after 30s. Operation dropped");
-                    break;
+                    System.out.println("[Warning] Couldn't connect to RMI after 30s.");
+                    return false;
                 } else if (!failed) {
                     System.out.println("[Warning] Error connecting to RMI. Trying to reconnect...");
                     failed = true;
@@ -156,7 +159,7 @@ public class TCPServer {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e1) {
-                    break;
+                    return false;
                 }
             }
         }
@@ -168,7 +171,7 @@ public class TCPServer {
                 return r.viewCurrentElections();
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI viewCurrentElections. Retrying connection");
-                connectToRMI();
+                if(!connectToRMI()) return null;
             }
         }
 
@@ -181,7 +184,7 @@ public class TCPServer {
                 return r.showTables(electionID);
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI showTables. Retrying connection");
-                connectToRMI();
+                if(!connectToRMI()) return null;
             }
         }
     }
@@ -192,7 +195,7 @@ public class TCPServer {
                 return r.showUserTable(electionID, tableID);
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI showTables. Retrying connection");
-                connectToRMI();
+                if(!connectToRMI()) return null;
             }
         }
     }
@@ -204,7 +207,7 @@ public class TCPServer {
                 return r.checkID(cc, electionID);
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI checkID. Retrying connection");
-                connectToRMI();
+                if(!connectToRMI()) return null;
             }
         }
     }
@@ -215,7 +218,7 @@ public class TCPServer {
                 return r.checkLogin(cc, username, password);
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI checkLogin. Retrying connection");
-                connectToRMI();
+                if(!connectToRMI()) return false;
             }
         }
     }
@@ -226,19 +229,18 @@ public class TCPServer {
                 return r.viewListsFromElection(electionID);
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI viewListsFromElection. Retrying connection");
-                connectToRMI();
+                if(!connectToRMI()) return null;
             }
         }
     }
 
     static String registerVote(int cc, String candidateName) {
-        //TODO: receive voted list (name, null or white)
         while (true) {
             try {
                 return r.vote(cc, candidateName, electionID, tableID);
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI vote. Retrying connection");
-                connectToRMI();
+                if(!connectToRMI()) return null;
             }
         }
     }
@@ -287,7 +289,8 @@ class Connection extends Thread {
             Socket clientSocket = aClientSocket;
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
-            out.printf("Connection with table #%d successful! You are voting terminal #%d\n", TCPServer.tableID, terminalID);
+            out.println(new Message(0, TCPServer.tableID, terminalID, null, null, null));
+            out.printf("[Pretty Print] Connection with table #%d successful! You are voting terminal #%d\n", TCPServer.tableID, terminalID);
             this.start();
         } catch (IOException e) {
             endConnection();
@@ -310,7 +313,8 @@ class Connection extends Thread {
         //type|i1|i2|s1|s2|list[0]|list[1]|list[2]|...
 
         if (isBlocked) {
-            out.println("Terminal is blocked. Message ignored.");
+            out.println(new Message(2, 0, 0, null, null, null));
+            out.println("[Pretty Print] Terminal is blocked. Message ignored.");
             return;
         }
 
@@ -321,43 +325,55 @@ class Connection extends Thread {
 
         Message m = new Message(s);
         if (!m.getIsValid()) {
-            out.println("Message not valid!");
+            out.println(new Message(1, 0, 0, null, null, null));
+            out.println("[Pretty Print] Message not valid!");
             return;
         }
 
         switch (m.getType()) {
             case 0:
                 if (TCPServer.checkLoginInfo(cc, m.getS1(), m.getS2())) {
-                    out.println("Login successful.");
-                    isLogged = true;
-                    String result = "";
+                    out.println(new Message(0, 0, 0, null, null, null));
+                    out.println("[Pretty Print] Login successful.");
                     ArrayList<String> candidateList = TCPServer.requestCandidatesList();
+                    if (candidateList == null){
+                        out.println(new Message(1, 0, 0, null, null, null));
+                        out.println("[Pretty Print] Failed to get candidate list");
+                        break;
+                    }
+                    out.println(new Message(4, 0, 0, null, null, candidateList));
+                    isLogged = true;
+                    String result = "[Pretty Print]\n";
                     for (String candidate : candidateList) {
                         result = String.format("%s\t%s\n", result, candidate);
                     }
                     result = result.concat("Pick your candidate\nUsage: 1|0|0|[Candidate's name]|0\n");
                     out.println(result);
                 } else {
-                    out.println("Login data was incorrect");
+                    out.println(new Message(1, 0, 0, null, null, null));
+                    out.println("[Pretty Print] Login failed");
                 }
                 break;
             case 1:
                 if (!isLogged) {
-                    out.println("You can't vote yet! Login first.");
+                    out.println(new Message(3, 0, 0, null, null, null));
+                    out.println("[Pretty Print] You can't vote yet! Login first.");
                     break;
                 }
-                //TODO: Send vote, allow for null our white votes
                 String aux = TCPServer.registerVote(cc, m.getS1());
                 if (aux != null) {
-                    out.printf("%s vote registered successfully.\n", aux);
+                    out.println(new Message(0, 0, 0, aux, null, null));
+                    out.printf("[Pretty Print] %s vote registered successfully.\n", aux);
                     blockTerminal();
                 } else {
-                    out.println("An error happened while voting. Please try to vote again.");
+                    out.println(new Message(1, 0, 0, null, null, null));
+                    out.println("[Pretty Print] An error happened while voting. Please try to vote again.");
                     break;
                 }
                 break;
             default:
-                out.println("Message type non-existent!");
+                out.println(new Message(1, 0, 0, null, null, null));
+                out.println("[Pretty Print] Message type non-existent!");
                 break;
         }
     }
@@ -370,7 +386,9 @@ class Connection extends Thread {
         recentActivity.set(false);
         timer.interrupt();
         System.out.printf("[STATUS] Terminal #%d was blocked.\n", terminalID);
-        out.println("This terminal has been blocked.");
+
+        out.println(new Message(2, 0, 0, null, null, null));
+        out.println("[Pretty Print] This terminal has been blocked.");
         return true;
     }
 
@@ -381,7 +399,8 @@ class Connection extends Thread {
         recentActivity.set(false);
         timer = new TimeoutTimer(this);
         System.out.printf("Unblocked terminal #%d. Timeout will occur if inactive for 120 seconds\n", terminalID);
-        out.printf("This terminal has been unlocked for %s (CC: %d). Timeout will occur if inactive for 120 seconds\nPlease login:\nUsage: 0|0|0|[username]|[password]\n", name, cc);
+        out.println(new Message(5, 0, 0, null, null, null));
+        out.printf("[Pretty Print] This terminal has been unlocked for %s (CC: %d). Timeout will occur if inactive for 120 seconds\nPlease login:\nUsage: 0|0|0|[username]|[password]\n", name, cc);
         return true;
     }
 
@@ -455,7 +474,7 @@ class AdminCommands extends Thread {
                     System.out.println("Inserted CC number is valid and can vote in this election!");
                     break;
                 } else {
-                    System.out.println("CC not in database or not allowed to vote in this election.");
+                    System.out.println("CC confirmation failed (probably not in database or not allowed to vote)");
                     TCPServer.enterToContinue();
                 }
 

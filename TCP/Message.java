@@ -10,6 +10,8 @@ public class Message {
     private Boolean isValid = false;
 
     //type|i1|i2|s1|s2|list[0]|list[1]|list[2]|...
+    //Client -> Server: 0 login; 1 vote.
+    //Server -> Client: 0 confirmation; 1 error; 2 blocked; 3 not logged; 4 info; 5 unblocked
     public Message(String msg) {
         if(msg==null) return;
         String[] split = msg.split("\\|");
@@ -42,7 +44,13 @@ public class Message {
 
     @Override
     public String toString() {
-        return String.format("%d|%d|%d|%s|%s|%s", type, i1, i2, s1, s2, String.join("|", sList));
+        String aux;
+        if(sList!=null){
+             aux = String.join("|", sList);
+        } else {
+            aux = "";
+        }
+        return String.format("%d|%d|%d|%s|%s|%s", type, i1, i2, s1, s2, aux);
     }
 
     public int getType() {
