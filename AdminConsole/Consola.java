@@ -1,3 +1,7 @@
+//TODO: horas nas eleiçoes
+//TODO: mudar nomes
+//TODO: 8 do menu
+
 import java.rmi.RemoteException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -142,7 +146,7 @@ public class Consola {
                         break;
 
                     case 3:
-                        createElection(); //acabar a cena da hora
+                        createElection();
                         break;
 
                     case 4:
@@ -162,7 +166,7 @@ public class Consola {
                     case 8:
 
                     case 9:
-
+                        
                     case 10:
 
                     case 11:
@@ -184,12 +188,20 @@ public class Consola {
         int elecID = pickElections(1);
         Scanner sc = new Scanner(System.in);
         int ccn;
+        String aux;
         System.out.printf("Introduza o número de cartão de cidadão da pessoa: ");
         while(true) {
-            ccn = readInt();
+            aux = sc.next();
+            if(aux.length()==9){
+                break;
+            }
         }
-
-        //r.checkTable(ccn,elecID);
+        ccn = toInt(aux);
+        if(r.checkTable(ccn,elecID)==-1){
+            System.out.println("Erro!");
+        }else{
+            System.out.println("Votou na mesa " + r.checkTable(ccn,elecID));
+        }
 
     }
 
