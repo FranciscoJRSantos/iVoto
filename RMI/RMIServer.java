@@ -787,7 +787,17 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       database.submitUpdate(sql); 
     }
     return true;
-  }   
+  }
+
+  /**
+   * Função de voto antecipado
+   * @param idElec Recebe o ID das eleiçoes onde votar
+   * @param cc Recebe o numero do cartao de cidado que vai votar
+   * @param vote Recebe a lista onde o utilizador vai votar
+   * @param pass Recebe a password do utilizador que vai votar
+   * @return Retorna true em caso de sucesso e false em caso de insucesso
+   * @throws RemoteException
+   */
 
   public boolean anticipatedVote(int idElec, int cc, String vote, String pass) throws RemoteException{
     //vote antecipado. o int vote é um int da lista de listas disponiveis retornada pela "viewListsFromElection"
@@ -821,7 +831,16 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     }
     return toClient;
 
-  } 
+  }
+
+  /**
+   * Funçao para criar uma lista
+   * @param nome Recebe o nome da lista a criar
+   * @param tipo Recebe o tipo da lista a criar. 1 - Estudantes | 2 - Docentes | 3 - Funcionarios
+   * @param eleicao_id Recebe o ID da eleição onde a lista vai estar englobada
+   * @return Retorna true em caso de sucesso e false em caso de insucesso
+   * @throws RemoteException
+   */
 
   public boolean createList(String nome, int tipo, int eleicao_id) throws RemoteException{
 
@@ -830,6 +849,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return true;
   }
+
+  /**
+   * Funçao para verificar os resultados de uma eleição
+   * @param idElec Recebe o ID da eleiçao de onde se quer saber os resultados
+   * @return Retorna uma ArrayList de ArrayLists de Strings em que o primeiro indice tem o nome de cada lista e o segundo indice tem o numero de votos de cada lista
+   * @throws RemoteException
+   */
 
   public ArrayList<ArrayList<String>> checkResults(int idElec) throws RemoteException{
     //recebe uma lista com [[lista,nº de votos],...]. return [[null,null]] em caso de insucesso
@@ -849,6 +875,14 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
+  /**
+   * Função usada para imprimir informação em tempo real sobre as mesas de voto
+   * @param idTable Recebe o ID da mesa da qual queremos informação
+   * @param idElec Recebe o ID da eleição à qual essa lista pertence
+   * @return Retorna o numero de votos da lista pedida
+   * @throws RemoteException
+   */
+
   public int TableInfo(int idTable, int idElec) throws RemoteException{
     //realtime info sobre o estado das mesas (return -1) if down, e numero de votos feitos naquela mesa (return n)
     int nVotos;
@@ -865,6 +899,14 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return nVotos;
   }
 
+  /**
+   * Metodo usado para saber a hora a que um eleitor votou numa determinada eleição
+   * @param idUser Recebe o ID do eleitor
+   * @param idElec Recebe o ID da eleição
+   * @return Retorna a data a que o utilizador votou
+   * @throws RemoteException
+   */
+
   public java.util.Date showHour(int idUser, int idElec) throws RemoteException{ 
 
     //saber quando uma pessoa votou, retorna algo que indique erro :) nao sei :) fds :)
@@ -880,7 +922,16 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     }
 
     return toClient;
-  } 
+  }
+
+  /**
+   * Mudar a data de uma eleição
+   * @param id Recebe o ID da mesa de voto onde esta a eleição
+   * @param newdate Recebe a nova data da eleição
+   * @param flag Recebe uma flag para definir se a data a mudar é de inicio ou fim. 1 - Inicio | 2 - Fim
+   * @return Em caso de sucesso retorna true, em caso de insucesso retorna false
+   * @throws RemoteException
+   */
 
   public boolean changeElectionsDates(int id, String newdate, int flag) throws RemoteException{
 
@@ -904,6 +955,15 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return toClient;
   }
 
+  /**
+   * Metodo para mudar o titulo ou a descrição de uma eleiçao
+   * @param id Recebe o ID da eleiçao
+   * @param text Recebe o texto a alterar
+   * @param flag Recebe a flag que distingue a alteração do titulo ou da descrição
+   * @return Em caso de sucesso retorna true, caso contrario retorna false
+   * @throws RemoteException
+   */
+
   public boolean changeElectionsText(int id, String text, int flag) throws RemoteException{
 
     boolean toClient = true;
@@ -925,6 +985,15 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return toClient;
   }
+
+  /**
+   *
+   * @param dep
+   * @param newName
+   * @param flag
+   * @return
+   * @throws RemoteException
+   */
 
   public boolean editDepFac(int dep, String newName, int flag) throws RemoteException{
 
