@@ -51,7 +51,7 @@ public class DatabaseConnection{
     }
   }
 
-    public ArrayList<String> submitQuery(String var1) {
+    public synchronized ArrayList<String> submitQuery(String var1) {
         System.out.println("Comando sql:" + var1);
         ArrayList<String> var2 = new ArrayList<String>();
 
@@ -77,7 +77,7 @@ public class DatabaseConnection{
         }
     }
 
-    public void submitUpdate(String var1){
+    public synchronized void submitUpdate(String var1){
       System.out.println("Comando sql:" + var1);
 
       try {
