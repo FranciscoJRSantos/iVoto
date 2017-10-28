@@ -431,8 +431,11 @@ public class Consola {
 
         System.out.println("Data e hora de início: ");
         beginning = sc.nextLine();
+        System.out.println("Data e hora de fim: ");
         end = sc.nextLine();
+        System.out.println("Titulo:");
         title = sc.nextLine();
+        System.out.println("Descrição:");
         desc = sc.nextLine();
 
         switch (electionType){
@@ -463,7 +466,7 @@ public class Consola {
 
     private void manageDepFac() throws RemoteException{
         Scanner sc = new Scanner(System.in);
-        int operation, target, id;
+        int operation, target, id=0;
         String name;
         boolean verify = false;
 
@@ -492,8 +495,14 @@ public class Consola {
 
         switch (operation){
             case 1:
+              if (target == 1){
                 id = getDepOrFacId(2);
                 System.out.printf("Insira o nome do novo departamento: ");
+              }
+              else if (target == 2){
+                id = 0;
+                System.out.printf("Insira o nome da nova faculdade: ");
+              }
                 name = sc.nextLine();
                 verify = r.addDepFac(id, name, target);
                 break;
@@ -587,7 +596,7 @@ public class Consola {
         }else{
             listId = r.verFaculdades().get(0);
             listNome = r.verFaculdades().get(1);
-            System.out.println("Qual o Faculdade?");
+            System.out.println("Qual a Faculdade?");
 
         }
         do {
