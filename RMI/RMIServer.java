@@ -39,6 +39,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
+  public void checkElectionStatus(){
+
+  }
+
   public static void main(String args[]) throws RemoteException{
 
     System.getProperties().put("java.security.policy", "policy.all");
@@ -196,8 +200,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     String protect = "SELECT * FROM MesaVoto WHERE departamento_id='" + idDep + "';";
     protection = database.submitQuery(protect);
 
-    if (!protection.isEmpty()){
-      String sql = "INSERT INTO MesaVoto (active,departamento_id,eleicao_id,numeroVotos) VALUES ('False','" + idDep + "','" + elecID + ",0);"; 
+    if (protection.isEmpty()){
+      String sql = "INSERT INTO MesaVoto (active,departamento_id,eleicao_id,numeroVotos) VALUES ('0','" + idDep + "','" + elecID + "',0);"; 
       database.submitUpdate(sql);
     }
     else{
@@ -211,9 +215,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     boolean toClient = true;
     ArrayList<String> protection;
-    String protect = "SELECT Eleicao WHERE='" + elecID + "' AND active = True;";
+    String protect = "SELECT MesaVoto WHERE='" + elecID + "' AND active = True;";
     protection = database.submitQuery(protect);
-    if (!protection.isEmpty()){
+    if (protection.isEmpty()){
       String sql = "DELETE FROM MesaVoto WHERE ID='" + table + "';";
       database.submitUpdate(sql);
     }
@@ -291,7 +295,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     boolean toClient = true;
 
-    String sql = "INSERT INTO User (name,hashed_password,contacto,morada,numeroCC,validadeCC,role,departamento_id,faculdade_id) VALUES ('" + name + "','" + pass +"','"+ phone+"','"+Address+"','"+ccn+"','"+ccv+"','"+type+"','"+dep+"','"+fac+");";
+    String sql = "INSERT INTO User (name,hashed_password,contacto,morada,numeroCC,validadeCC,role,departamento_id,faculdade_id) VALUES ('" + name + "','" + pass +"','"+ phone+"','"+Address+"','"+ccn+"','"+ccv+"','"+type+"','"+dep+"','"+fac+"');";
 
     database.submitUpdate(sql);
 
@@ -475,24 +479,33 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public ArrayList<String> viewListsFromElection(int id) throws RemoteException{
 
     ArrayList<String> toClient;
-    String sql = "SELECT nome FROM Lista WHERE eleicao_id='" + id + "' OR tipo=0;";
+    String sql = "SELECT nome FROM Lista WHERE eleicao_id='" + id + "';";
 
     toClient = database.submitQuery(sql);
     return toClient;
   }
 
-  public boolean manageList(int idElec, String List, int flag) throws RemoteException{
+  public ArrayList<String> printListsFromElection(int id) throws RemoteException{
+
+    ArrayList<String> toClient;
+    String sql = "SELECT nome FROM Lista WHERE eleicao_id='" + id + "' OR tipo!=0;";
+
+    toClient = database.submitQuery(sql);
+    return toClient;
+  }
+
+  public boolean manageList(int idElec,int listType, String List, int flag) throws RemoteException{
     //flag 1 - add list, flag 2 - remove list
     boolean toClient = true;
     ArrayList<String> aux;
     String sql;
 
     if (flag == 1){
-      sql = "INSERT INTO List (nome) VALUES ('" + List + "');"; 
+      sql = "INSERT INTO Lista (nome,tipo) VALUES ('" + List + "','" + listType + "');"; 
       database.submitUpdate(sql);
     }
     else if(flag ==2){
-      sql = "REMOVE FROM List WHERE ID='" + idElec + "';";
+      sql = "REMOVE FROM Lista WHERE ID='" + idElec + "';";
       database.submitUpdate(sql);
     }
     return toClient;
@@ -519,9 +532,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     //mudar a pessoa que está na mesa 
 
     boolean toClient = true;
-    String sql = "UPDATE User WHERE mesavoto_id='" + idTable + "SET mesavoto_id = NULL;";
+    String sql = "UPDATE User SET mesavoto_id = NULL WHERE mesavoto_id='" + idTable + "';";
     database.submitUpdate(sql);
-    sql = "UPDATE User WHERE ID='" + idNewUser + "' SET mesavoto_id='" + idTable + "';";
+    sql = "UPDATE User SET mesavoto_id='" + idTable + "' WHERE ID='" + idNewUser + "';";
     database.submitUpdate(sql);
 
     return toClient;
@@ -627,7 +640,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     boolean toClient = true;
     ArrayList<String> aux;
-    String sql = "SELECT * FROM MetaVoto WHERE ID='" + id + "' AND active='False';";
+    String sql = "SELECT * FROM MesaVoto WHERE ID='" + id + "' AND active='False';";
     aux = database.submitQuery(sql);
     if (aux.isEmpty()){
       toClient = false;
@@ -649,17 +662,17 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     boolean toClient = true;
     ArrayList<String> aux;
-    String sql = "SELECT * FROM MetaVoto WHERE ID='" + id + "' AND active='False';";
+    String sql = "SELECT * FROM Eleicao WHERE ID='" + id + "' AND active='0';";
     aux = database.submitQuery(sql);
     if (aux.isEmpty()){
       toClient = false;
     }
     else{
       if (flag == 1){
-        sql = "UPDATE MesaVoto WHERE ID='" + id + "SET titulo='" + text + "';";
+        sql = "UPDATE Eleicao  SET titulo='" + text + "' WHERE ID='" + id + "';";
       }
       else if (flag == 2){
-        sql = "UPDATE MesaVoto WHERE ID='" + id + "SET descricao='" + text + "';";
+        sql = "UPDATE Eleicao  SET descricao='" + text + "' WHERE ID='" + id + "';";
       }
       database.submitUpdate(sql);
     } 
@@ -684,70 +697,69 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return true;
   }
 
-  public boolean criaEleiçãoNE(java.sql.Date beginning, java.sql.Date end, String title, String description, int dep) throws RemoteException{
+  public boolean criaEleiçãoNE(String beginning, String end, String title, String description, int dep) throws RemoteException{
 
     //cria eleição Nucleo de estudantes. . As eleições para núcleo de estudantes decorrem num único departamento e podem votar apenas os estudantes desse departamento.
     int eleicao_id;
     ArrayList<String> needed;
-    String sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',1);";
+    String sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo,active) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',1,false);";
     database.submitUpdate(sql1);
 
     String aux = "SELECT LAST_INSERT_ID();";
     needed = database.submitQuery(aux);
     eleicao_id = Integer.parseInt(needed.get(0));
 
-    String sql2 = "INSERT INTO Departamento_Eleicao (faculdade_id, eleicao_id) VALUES (' " + dep + ",'" + eleicao_id + "');";
-    database.submitUpdate(sql1);
+    String sql2 = "INSERT INTO Departamento_Eleicao (departamento_id, eleicao_id) VALUES ('" + dep + "','" + eleicao_id + "');";
     database.submitUpdate(sql2);
 
     return true;
 
   }
 
-  public boolean criaEleiçãoCG(java.sql.Date beginning, java.sql.Date end, String title, String description) throws RemoteException{
+  public boolean criaEleiçãoCG(String beginning,String end, String title, String description) throws RemoteException{
 
     // os estudantes votam apenas nas listas de estudantes, os docentes votam apenas nas listas de docentes, e os funcionários votam apenas nas listas de funcionários.
     String sql1;
-    sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',2);";
+    sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo,active) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',2,false);";
     database.submitUpdate(sql1);
-    sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',3);";
+    sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo,active) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',3,false);";
     database.submitUpdate(sql1);
-    sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',4);";
+    sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo,active) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',4,false);";
     database.submitUpdate(sql1);
 
     return true;
 
   }
 
-  public boolean criaEleiçãoDF(java.sql.Date beginning, java.sql.Date end, String title, String description, int idFac) throws RemoteException{
+  public boolean criaEleiçãoDF(String beginning,String end, String title, String description, int idFac) throws RemoteException{
     //cria eleição para a direção da faculdade
     int eleicao_id;
     ArrayList<String> needed;
-    String sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',5);";
+    String sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo,active) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',5,false);";
+    database.submitUpdate(sql1);
     String aux = "SELECT LAST_INSERT_ID();";
     needed = database.submitQuery(aux);
     eleicao_id = Integer.parseInt(needed.get(0));
 
-    String sql2 = "INSERT INTO Faculdade_Eleicao (faculdade_id, eleicao_id) VALUES (' " + idFac + ",'" + eleicao_id + "');";
-    database.submitUpdate(sql1);
+    String sql2 = "INSERT INTO Faculdade_Eleicao (faculdade_id, eleicao_id) VALUES ('" + idFac + "','" + eleicao_id + "');";
     database.submitUpdate(sql2);
 
     return true;
   }
 
 
-  public boolean criaEleiçãoDD(java.sql.Date beginning, java.sql.Date end, String title, String description, int idDep) throws RemoteException{
+  public boolean criaEleiçãoDD(String beginning, String end, String title, String description, int idDep) throws RemoteException{
 
     //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
     int eleicao_id;
     ArrayList<String> needed;
-    String sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',6);";
+    String sql1 = "INSERT INTO Eleicao (titulo,descricao,inicio,fim,tipo,active) VALUES ('" + title + "','" + description + "','" + beginning + "','" + end + "',6,false);";
+    database.submitUpdate(sql1);
     String aux = "SELECT LAST_INSERT_ID();";
     needed = database.submitQuery(aux);
     eleicao_id = Integer.parseInt(needed.get(0));
 
-    database.submitUpdate(sql1);
-    String sql2 = "INSERT INTO Departamento_Eleicao (faculdade_id, eleicao_id) VALUES (' " + idDep + ",'" + eleicao_id + "');";
+    String sql2 = "INSERT INTO Departamento_Eleicao (departamento_id, eleicao_id) VALUES ('" + idDep + "','" + eleicao_id + "');";
     database.submitUpdate(sql2);
 
     return true;

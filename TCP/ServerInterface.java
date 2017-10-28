@@ -1,6 +1,5 @@
 import java.rmi.*;
 import java.util.*;
-import java.sql.Date;
 
 public interface ServerInterface extends Remote{
     public boolean isConnected() throws RemoteException;
@@ -15,13 +14,12 @@ public interface ServerInterface extends Remote{
     public boolean addDepFac(int faculdade_id, String newName, int flag) throws RemoteException; //add departamento / faculdade. flag 1 - dep, flag 2 - fac
     public boolean rmDepFac(int dep, int flag) throws RemoteException; //remove departamento / faculdade. flag 1 - dep, flag 2 - fac
     public boolean editDepFac(int dep, String newName, int flag) throws RemoteException; //edita nome de departamento / faculdade. flag 1 - dep, flag 2 - fac
-    public boolean criaEleiçãoNE(java.sql.Date beginning, java.sql.Date end, String title, String description, int dep) throws RemoteException; //cria eleição Nucleo de estudantes. . As eleições para núcleo de estudantes decorrem num único departamento e podem votar apenas os estudantes desse departamento.
-    public boolean criaEleiçãoCG(java.sql.Date beginning, java.sql.Date end, String title, String description) throws RemoteException; // os estudantes votam apenas nas listas de estudantes, os docentes votam apenas nas listas de docentes, e os funcionários votam apenas nas listas de funcionários.
-    public boolean criaEleiçãoDD(java.sql.Date beginning, java.sql.Date end, String title, String description, int idDep) throws RemoteException; //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
-    public boolean criaEleiçãoDF(java.sql.Date beginning, java.sql.Date end, String title, String description, int idFac) throws RemoteException; //cria eleição para a direção da faculdade, cria eleição para a direção do departamento
-    public boolean manageList(int idElec, String List, int flag) throws RemoteException; //flag 1 - add list, flag 2 - remove list
+    public boolean criaEleiçãoNE(String beginning, String end, String title, String description, int dep) throws RemoteException; //cria eleição Nucleo de estudantes. . As eleições para núcleo de estudantes decorrem num único departamento e podem votar apenas os estudantes desse departamento.
+    public boolean criaEleiçãoCG(String beginning, String end, String title, String description) throws RemoteException; // os estudantes votam apenas nas listas de estudantes, os docentes votam apenas nas listas de docentes, e os funcionários votam apenas nas listas de funcionários.
+    public boolean criaEleiçãoDD(String beginning, String end, String title, String description, int idDep) throws RemoteException; //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
+    public boolean criaEleiçãoDF(String beginning, String end, String title, String description, int idFac) throws RemoteException; //cria eleição para a direção da faculdade, cria eleição para a direção do departamento
+    public boolean manageList(int idElec,int listType, String List, int flag) throws RemoteException;
     public ArrayList<String> viewListsFromElection(int id) throws RemoteException; //recebe id da eleição e mostra as listas disponiveis
-    public ArrayList<ArrayList<String>> viewCurrentElections() throws RemoteException; //mostra todas as eleições a decorrer ou futuras
     public boolean changeElectionsText(int id, String text, int flag) throws RemoteException; //Muda titulo ou descriçao de uma eleiçao. flag 1 - titulo, flag 2 - descrição
     public boolean changeElectionsDates(int id, String newdate, int flag) throws RemoteException; //Muda a hora de uma eleiçao. flag 1 - inicio, flag 2 - fim
     public int checkTable(int idUser, int idElec) throws RemoteException; //saber onde uma pessoa votou, retorna -1 em caso de insucesso
@@ -39,4 +37,9 @@ public interface ServerInterface extends Remote{
     public ArrayList<ArrayList<String>> showUserTable(int eleicao_id, int mesavoto_id) throws RemoteException;
     public boolean addTableToElection(int elecID, int idDep) throws RemoteException;
     public boolean removeTableFromElection(int elecID, int table) throws RemoteException;
+    public ArrayList<ArrayList<String>> viewCurrentElections() throws RemoteException; 
+    public ArrayList<ArrayList<String>> viewPastCurrentElections() throws RemoteException;
+    public ArrayList<ArrayList<String>> viewPastElections() throws RemoteException;
+    public ArrayList<ArrayList<String>> viewFutureElections() throws RemoteException;
+    public ArrayList<String> printListsFromElection(int id) throws RemoteException;
 }

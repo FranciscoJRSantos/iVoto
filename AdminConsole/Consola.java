@@ -175,6 +175,8 @@ public class Consola {
                     case 12:
 
                     case 13:
+                        manageTablePersonel();
+                        break;
 
 
                 }
@@ -271,7 +273,7 @@ public class Consola {
             }
         } while (operation <= 0 || operation > 2);
 
-        int elecID =  pickElections(1); //tem que ser 2! pus 1 para testes! 
+        int elecID =  pickElections(2); //tem que ser 2! pus 1 para testes! 
         switch (operation){
             case 1:
                 System.out.println("Associe um departamento à mesa!");
@@ -293,10 +295,59 @@ public class Consola {
         }
     }
 
+    private void manageTablePersonel() throws RemoteException{
+        int operation;
+        boolean verify = false;
+        int userID, tableID;
+
+        int elecID =  pickElections(2); //tem que ser 2! pus 1 para testes! 
+        tableID = pickTableFromElection(elecID); 
+        userID = pickPersonFromTable(elecID,tableID); 
+
+        if(verify) {
+            System.out.println("Sucesso!");
+        }else{
+            System.out.println("Erro!");
+        }
+    }
+
+    private int pickPersonFromTable(int elecID, int mesavoto_id) throws RemoteException{
+
+        Scanner sc = new Scanner(System.in);
+        ArrayList<ArrayList<String>> usersList = new ArrayList<ArrayList<String>>();
+        mesavoto_id = pickTableFromElection(elecID);
+        usersList = r.showUserTable(elecID, mesavoto_id);
+        
+        ArrayList<String> tableIDList = usersList.get(0);
+        ArrayList<String> tableNameList = usersList.get(1);
+        boolean flag = true;
+        int option = 0;
+        String table;
+
+        if(usersList.size()==0){
+            System.out.println("Não existe nenhuma mesa.");
+            return -1;
+        }
+        while(flag) {
+            flag=false;
+            System.out.println("Qual o utilizador?");
+            for (int i = 0; i < tableIDList.size(); i++) {
+                    System.out.printf("\t%s - %s\n", tableIDList.get(i), tableNameList.get(i));
+            }
+
+            option = readInt();
+        }
+        table = tableIDList.get(option-1);
+        return toInt(table);
+    
+    }
+
+
     private void manageLists() throws RemoteException{
         Scanner sc = new Scanner(System.in);
         int electionId = pickElections(1);
         int operation;
+        int listType=0;
         String list;
 
         do {
@@ -313,12 +364,25 @@ public class Consola {
         if (operation == 1){
             System.out.println("Nome da nova lista candidata: ");
             list = sc.nextLine();
+            System.out.println("Tipo da nova Lista candidata: ");
+            do {
+              System.out.println("Tipo da Lista:");
+              System.out.println("1-Estudantes");
+              System.out.println("2-Docentes");
+              System.out.println("3-Funcionários");
+              System.out.printf("Opção: ");
+              listType = readInt();
+              if (listType <= 0 || listType > 3) {
+                System.out.println("Insira um valor válido, çá xabor.\n");
+              }
+            } while (listType <= 0 || listType > 3);
+
         }
         else {
             list = pickListFromElection(electionId);
         }
 
-        if(r.manageList(electionId, list, operation)) {
+        if(r.manageList(electionId, listType, list, operation)) {
             System.out.println("Sucesso!");
         }else{
             System.out.println("Erro!");
@@ -341,23 +405,22 @@ public class Consola {
             flag=false;
             System.out.println("Qual mesa de voto?");
             for (int i = 0; i < tableList.size(); i++) {
-                System.out.println(i + 1 + " -> " + tableList.get(i));
+                System.out.println( tableList.get(i) + " -> " + tableList.get(i));
             }
 
             option = readInt();
-            if(option<=0 || option > tableList.size()){
+            if(option < Integer.parseInt(tableList.get(0)) || option > Integer.parseInt(tableList.get(tableList.size()-1))){
                 flag = true;
             }
         }
 
-        table = tableList.get(option-1);
-        return toInt(table);
+        return option;
     }
 
     private String pickListFromElection(int elecID) throws RemoteException{
         Scanner sc = new Scanner(System.in);
         ArrayList<String> listsList = null;
-        listsList = r.viewListsFromElection(elecID);
+        listsList = r.printListsFromElection(elecID);
         boolean flag = true;
         int option = 0;
         String list;
@@ -386,9 +449,9 @@ public class Consola {
         if(type==1) {
             electionsList = r.viewCurrentElections();
         }if(type==2){
-            //electionsList = r.viewFutureElections();
+            electionsList = r.viewFutureElections();
         }else{
-            //electionsList = r.viewPastCurrentElections();
+            electionsList = r.viewPastCurrentElections();
         }
 
         ArrayList<String> idList = electionsList.get(0);
@@ -397,12 +460,12 @@ public class Consola {
         while(flag) {
             flag=false;
             System.out.println("Qual eleição?");
-            for (int i = 0; i < idList.size(); i++) {
-                System.out.println(i + 1 + " -> " + idList.get(i) + " - " + titleList.get(i));
+            for (int i =  0 ; i < idList.size(); i++) {
+                System.out.println((Integer.parseInt(idList.get(i))) + " -> " + idList.get(i) + " - " + titleList.get(i));
             }
             System.out.printf("Opção: ");
             option = readInt();
-            if(option<=0 || option > idList.size()){
+            if(option < Integer.parseInt(idList.get(0)) || option > Integer.parseInt(idList.get(idList.size()-1))){
                 flag = true;
             }
         }
@@ -533,9 +596,9 @@ public class Consola {
         String ccv;
         do {
             System.out.println("Que pessoa quer adicionar?");
-            System.out.println("1-Docente");
-            System.out.println("2-Funcionário");
-            System.out.println("3-Aluno");
+            System.out.println("1-Aluno");
+            System.out.println("2-Docente");
+            System.out.println("3-Funcionário");
             System.out.printf("Opção: ");
             option = readInt();
             if (option <= 0 || option > 3) {
