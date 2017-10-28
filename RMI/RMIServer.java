@@ -291,6 +291,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       System.out.println(aux2);
       if (aux2.isEmpty()){
         String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id,whenVoted) VALUES('" + aux1.get(0) + "','" + eleicao_id + "',true,'" + mesavoto_id + "',NOW());";
+        String sql7 = "UPDATE MesaVoto SET numeroVotos=numeroVotos+1 WHERE ID='" +mesavoto_id+ "';";
+        database.submitUpdate(sql7);
         database.submitUpdate(sql5);
         database.submitUpdate(sql1);
         toClient = lista;
