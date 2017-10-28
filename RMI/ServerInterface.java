@@ -18,7 +18,7 @@ public interface ServerInterface extends Remote{
     public boolean criaEleiçãoCG(String beginning, String end, String title, String description) throws RemoteException; // os estudantes votam apenas nas listas de estudantes, os docentes votam apenas nas listas de docentes, e os funcionários votam apenas nas listas de funcionários.
     public boolean criaEleiçãoDD(String beginning, String end, String title, String description, int idDep) throws RemoteException; //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
     public boolean criaEleiçãoDF(String beginning, String end, String title, String description, int idFac) throws RemoteException; //cria eleição para a direção da faculdade, cria eleição para a direção do departamento
-    public boolean manageList(int idElec,int listType, String List, int flag) throws RemoteException;
+    public boolean manageList(int idElec, int listType, String List, int flag) throws RemoteException; //flag 1 - add list, flag 2 - remove list
     public ArrayList<String> viewListsFromElection(int id) throws RemoteException; //recebe id da eleição e mostra as listas disponiveis
     public boolean changeElectionsText(int id, String text, int flag) throws RemoteException; //Muda titulo ou descriçao de uma eleiçao. flag 1 - titulo, flag 2 - descrição
     public boolean changeElectionsDates(int id, String newdate, int flag) throws RemoteException; //Muda a hora de uma eleiçao. flag 1 - inicio, flag 2 - fim

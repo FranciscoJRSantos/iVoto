@@ -936,7 +936,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
-  public boolean criaEleiçãoCG(String beginning,String end, String title, String description) throws RemoteException{
+  public boolean criaEleiçãoCG(String beginning, String end, String title, String description) throws RemoteException{
 
     // os estudantes votam apenas nas listas de estudantes, os docentes votam apenas nas listas de docentes, e os funcionários votam apenas nas listas de funcionários.
     String sql1;
@@ -951,7 +951,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
-  public boolean criaEleiçãoDF(String beginning,String end, String title, String description, int idFac) throws RemoteException{
+  public boolean criaEleiçãoDF(String beginning, String end, String title, String description, int idFac) throws RemoteException{
+
     //cria eleição para a direção da faculdade
     int eleicao_id;
     ArrayList<String> needed;
@@ -966,7 +967,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return true;
   }
-
 
   public boolean criaEleiçãoDD(String beginning, String end, String title, String description, int idDep) throws RemoteException{
 
@@ -984,7 +984,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return true;
   }
-
 
   class UDPConnection extends Thread {
 

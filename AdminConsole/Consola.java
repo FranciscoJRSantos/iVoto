@@ -1,6 +1,7 @@
 //TODO: horas nas eleiçoes
 //TODO: mudar nomes
-//TODO: 8 do menu
+//TODO: next();
+//TODO: datas proteção
 
 import java.rmi.RemoteException;
 import java.text.ParseException;
@@ -164,21 +165,26 @@ public class Consola {
                     case 7:
                         checkVoteLocal();
                         break;
+
                     case 8:
 
                     case 9:
 
                     case 10:
-
-                    case 11:
-
-                    case 12:
-
-                    case 13:
-                        manageTablePersonel();
+                        checkPastElections();
                         break;
 
+                    case 11:
+                        anticipatedVote();
+                        break;
 
+                    case 12:
+                        editPerson();
+                        break;
+
+                    case 13:
+                        manageTablePersonal();
+                        break;
                 }
             } catch (RemoteException re) {
                 isConnected = false;
@@ -187,19 +193,133 @@ public class Consola {
         flag = false;
     }
 
-    private void checkVoteLocal() throws RemoteException{
-        int elecID = pickElections(1);
+    private void editPerson() throws RemoteException {
         Scanner sc = new Scanner(System.in);
-        int ccn;
-        String aux;
-        while(true) {
-            System.out.printf("Introduza o número de cartão de cidadão da pessoa: ");
-            aux = sc.next();
-            if(aux.length()==8){
-                break;
+        int operation, ccn;
+        String aux, newString = null;
+
+        System.out.printf("Introduza o número de cartão de cidadão!");
+        ccn = getPhoneOrCCN(2);
+
+        do {
+            System.out.println("O que quer editar? ");
+            System.out.println("1-Nome");
+            System.out.println("2-Morada");
+            System.out.println("3-Telemóvel");
+            System.out.println("4-Número de cartão de cidadão");
+            System.out.println("5-Validade do cartão de cidadão");
+            System.out.println("6-Departamento");
+            System.out.println("7-Faculdade");
+            System.out.println("8-Palavra-Pass");
+            System.out.printf("Opção: ");
+            operation = readInt();
+            if (operation <= 0 || operation > 8) {
+                System.out.println("Insira um valor válido, çá xabor.\n");
             }
+        } while (operation <= 0 || operation > 8);
+
+        switch(operation){
+            case 1:
+                System.out.println("Novo nome do utilizador: ");
+                newString = sc.nextLine();
+                break;
+            case 2:
+                System.out.println("Nova morada do utilizador: ");
+                newString = sc.nextLine();
+                break;
+            case 3:
+                System.out.println("Novo contacto do utilizador: ");
+                newString = String.valueOf(getPhoneOrCCN(1));
+                break;
+
+            case 4:
+                System.out.println("Novo número de cartão de cidadão: ");
+                newString = String.valueOf(getPhoneOrCCN(1));
+                break;
+
+            case 5:
+                System.out.println("Nova validade do cartão de cidadão: ");
+                newString = sc.nextLine();
+                break;
+
+            case 6:
+                System.out.println("Novo departamento do utilizador: ");
+                newString=String.valueOf(getDepOrFacId(1));
+                break;
+            case 7:
+                System.out.println("Novo departamento do utilizador: ");
+                newString=String.valueOf(getDepOrFacId(2));
+                break;
+            case 8:
+                System.out.println("Nova pass do utilizador: ");
+                newString = sc.nextLine();
+                break;
         }
-        ccn = toInt(aux);
+
+        if(r.editPerson(ccn, newString, operation)){
+            System.out.println("Sucesso!");
+        }else{
+            System.out.println("Erro!");
+        }
+    }
+
+    private void anticipatedVote() throws RemoteException{
+        Scanner sc = new Scanner(System.in);
+        int elecId = pickElections(2);
+        if(elecId==-1){
+            System.out.println("Erro!");
+            return;
+        }
+        String voto;
+        int ccn;
+
+        System.out.printf("Introduza o número de cartão de cidadão!");
+        ccn = getPhoneOrCCN(2);
+
+        System.out.println("Introduza a palavra pass: ");
+        String pass = sc.nextLine();
+
+        voto = pickListFromElection(elecId, 2);
+        if(voto.equals("")){
+            System.out.println("Erro!");
+            return;
+        }
+
+        if(r.anticipatedVote(elecId, ccn, vote, pass)){
+            System.out.println("Sucesso!");
+        }else{
+            System.out.println("Erro!");
+        }
+    }
+
+    private void checkPastElections() throws RemoteException{
+        int elecId = pickElections(3);
+        if(elecId==-1){
+            System.out.println("Erro!");
+            return;
+        }
+        ArrayList<ArrayList<String>> results = r.checkResults(elecId);
+        if(results.get(1).size()==0){
+            System.out.println("Não existem resultados!");
+            return;
+        }
+        System.out.println("Resultados: ");
+        for(int i = 0; i<results.get(0).size(); i++){
+            System.out.println("-> " + results.get(0).get(i) + " - nº de votos - " + results.get(1).get(i));
+        }
+    }
+
+    private void checkVoteLocal() throws RemoteException{
+        int elecID = pickElections(4);
+        if(elecID==-1){
+            System.out.println("Erro!");
+            return;
+        }
+
+        int ccn;
+        System.out.printf("Introduza o número de cartão de cidadão!");
+        ccn = getPhoneOrCCN(2);
+
         if(r.checkTable(ccn,elecID)==-1){
             System.out.println("Erro!");
         }else{
@@ -212,6 +332,10 @@ public class Consola {
         int operation;
         Scanner sc = new Scanner(System.in);
         int elecId = pickElections(2);
+        if(elecId==-1){
+            System.out.println("Erro!");
+            return;
+        }
         String newInput;
         boolean verify = false;
 
@@ -273,11 +397,21 @@ public class Consola {
             }
         } while (operation <= 0 || operation > 2);
 
-        int elecID =  pickElections(2); //tem que ser 2! pus 1 para testes! 
+
+        int elecID =  pickElections(2);
+        if(elecID==-1){
+            System.out.println("Erro!");
+            return;
+        }
+
         switch (operation){
             case 1:
                 System.out.println("Associe um departamento à mesa!");
                 int idDep = getDepOrFacId(1);
+                if(idDep==-1){
+                    System.out.println("Erro!");
+                    return;
+                }
                 verify = r.addTableToElection(elecID, idDep);
                 break;
             case 2:
@@ -295,12 +429,12 @@ public class Consola {
         }
     }
 
-    private void manageTablePersonel() throws RemoteException{
+    private void manageTablePersonal() throws RemoteException{
         int operation;
         boolean verify = false;
         int userID, tableID;
 
-        int elecID =  pickElections(2); //tem que ser 2! pus 1 para testes! 
+        int elecID =  pickElections(2);
         tableID = pickTableFromElection(elecID); 
         userID = pickPersonFromTable(elecID,tableID); 
 
@@ -314,7 +448,7 @@ public class Consola {
     private int pickPersonFromTable(int elecID, int mesavoto_id) throws RemoteException{
 
         Scanner sc = new Scanner(System.in);
-        ArrayList<ArrayList<String>> usersList = new ArrayList<ArrayList<String>>();
+        ArrayList<ArrayList<String>> usersList;
         mesavoto_id = pickTableFromElection(elecID);
         usersList = r.showUserTable(elecID, mesavoto_id);
         
@@ -322,9 +456,8 @@ public class Consola {
         ArrayList<String> tableNameList = usersList.get(1);
         boolean flag = true;
         int option = 0;
-        String table;
 
-        if(usersList.size()==0){
+        if(tableIDList.size()==0){
             System.out.println("Não existe nenhuma mesa.");
             return -1;
         }
@@ -332,20 +465,29 @@ public class Consola {
             flag=false;
             System.out.println("Qual o utilizador?");
             for (int i = 0; i < tableIDList.size(); i++) {
-                    System.out.printf("\t%s - %s\n", tableIDList.get(i), tableNameList.get(i));
+                    System.out.printf(i+1 + " - " + tableNameList.get(i));
             }
 
             option = readInt();
+            if(option <= 0 || option > tableIDList.size()-1){
+                System.out.println("Opção Inválida.");
+                flag = true;
+            }
         }
-        table = tableIDList.get(option-1);
-        return toInt(table);
+
+        return toInt(tableIDList.get(option-1));
     
     }
 
-
     private void manageLists() throws RemoteException{
         Scanner sc = new Scanner(System.in);
-        int electionId = pickElections(2);
+
+        int electionId = pickElections(1);
+        if(electionId==-1){
+            System.out.println("Erro!");
+            return;
+        }
+
         int operation;
         int listType=0;
         String list;
@@ -379,7 +521,11 @@ public class Consola {
 
         }
         else {
-            list = pickListFromElection(electionId);
+            list = pickListFromElection(electionId,1);
+            if(list.equals("")){
+                System.out.println("Erro");
+                return;
+            }
         }
 
         if(r.manageList(electionId, listType, list, operation)) {
@@ -390,8 +536,7 @@ public class Consola {
     }
 
     private int pickTableFromElection(int elecID) throws RemoteException{
-        Scanner sc = new Scanner(System.in);
-        ArrayList<String> tableList = null;
+        ArrayList<String> tableList;
         tableList = r.showTables(elecID);
         boolean flag = true;
         int option = 0;
@@ -405,26 +550,34 @@ public class Consola {
             flag=false;
             System.out.println("Qual mesa de voto?");
             for (int i = 0; i < tableList.size(); i++) {
-                System.out.println( tableList.get(i) + " -> " + tableList.get(i));
+                System.out.println( i+1 + " -> " + tableList.get(i));
             }
-
             option = readInt();
-            if(option < Integer.parseInt(tableList.get(0)) || option > Integer.parseInt(tableList.get(tableList.size()-1))){
+            if(option <= 0 || option > tableList.size()-1){
+                System.out.println("Opção Inválida.");
                 flag = true;
             }
         }
 
-        return option;
+        return toInt(tableList.get(option-1));
     }
 
-    private String pickListFromElection(int elecID) throws RemoteException{
-        Scanner sc = new Scanner(System.in);
-        ArrayList<String> listsList = null;
-        listsList = r.printListsFromElection(elecID);
+    private String pickListFromElection(int elecID, int type) throws RemoteException{
+
+        ArrayList<String> listsList;
+        if(type==1){
+            listsList = r.printListsFromElection(elecID);
+
+        }else{
+            listsList = r.viewListsFromElection(elecID);
+        }
         boolean flag = true;
         int option = 0;
-        String list;
 
+        if(listsList.size() ==0){
+            System.out.println("Não existe nenhuma lista nesta eleição.");
+            return "";
+        }
         while(flag) {
             flag=false;
             System.out.println("Qual a lista?");
@@ -433,7 +586,7 @@ public class Consola {
             }
 
             option = readInt();
-            if(option<=0 || option > listsList.size()){
+            if(option<=0 || option > listsList.size()-1){
                 flag = true;
             }
         }
@@ -442,14 +595,17 @@ public class Consola {
     }
 
     private int pickElections(int type) throws RemoteException{
-        Scanner sc = new Scanner(System.in);
         boolean flag = true;
         int option = 0;
-        ArrayList<ArrayList<String>> electionsList = null;
+        ArrayList<ArrayList<String>> electionsList;
         if(type==1) {
             electionsList = r.viewCurrentElections();
         }if(type==2){
             electionsList = r.viewFutureElections();
+
+        }if(type==3){
+            electionsList= r.viewPastElections();
+
         }else{
             electionsList = r.viewPastCurrentElections();
         }
@@ -457,19 +613,24 @@ public class Consola {
         ArrayList<String> idList = electionsList.get(0);
         ArrayList<String> titleList = electionsList.get(1);
 
+        if(idList.size()==0){
+            System.out.println("Não existem eleições a apresentar!");
+            return -1;
+        }
+
         while(flag) {
             flag=false;
             System.out.println("Qual eleição?");
-            for (int i =  0 ; i < idList.size(); i++) {
-                System.out.println((Integer.parseInt(idList.get(i))) + " -> " + idList.get(i) + " - " + titleList.get(i));
+            for (int i = 0; i < idList.size(); i++) {
+                System.out.println(i + 1 + " -> " + idList.get(i) + " - " + titleList.get(i));
             }
             System.out.printf("Opção: ");
             option = readInt();
-            if(option < Integer.parseInt(idList.get(0)) || option > Integer.parseInt(idList.get(idList.size()-1))){
+            if(option<=0 || option > idList.size()-1){
                 flag = true;
             }
         }
-        return option;
+        return toInt(idList.get(option-1));
 
     }
 
@@ -504,6 +665,10 @@ public class Consola {
         switch (electionType){
             case 1:
                 id = getDepOrFacId(1);
+                if(id==-1){
+                    System.out.println("Erro!");
+                    return;
+                }
                 verify = r.criaEleiçãoNE(beginning, end, title, desc, id);
                 break;
             case 2:
@@ -511,10 +676,18 @@ public class Consola {
                 break;
             case 3:
                 id = getDepOrFacId(1);
+                if(id==-1){
+                    System.out.println("Erro!");
+                    return;
+                }
                 verify = r.criaEleiçãoDD(beginning, end, title, desc, id);
                 break;
             case 4:
                 id = getDepOrFacId(2);
+                if(id==-1){
+                    System.out.println("Erro!");
+                    return;
+                }
                 verify = r.criaEleiçãoDF(beginning, end, title, desc, id);
                 break;
         }
@@ -560,6 +733,10 @@ public class Consola {
             case 1:
               if (target == 1){
                 id = getDepOrFacId(2);
+                  if(id==-1){
+                      System.out.println("Erro!");
+                      return;
+                  }
                 System.out.printf("Insira o nome do novo departamento: ");
               }
               else if (target == 2){
@@ -571,10 +748,18 @@ public class Consola {
                 break;
             case 2:
                 id = getDepOrFacId(1);
+                if(id==-1){
+                    System.out.println("Erro!");
+                    return;
+                }
                 verify = r.rmDepFac(id, target);
                 break;
             case 3:
                 id = getDepOrFacId(1);
+                if(id==-1){
+                    System.out.println("Erro!");
+                    return;
+                }
                 System.out.print("Insira o novo nome do departamento: ");
                 name = sc.nextLine();
                 verify = r.editDepFac(id, name, target);
@@ -610,7 +795,15 @@ public class Consola {
         System.out.printf("Introduza o número de cartão de cidadão!");
         ccn = getPhoneOrCCN(2);
         iddep = getDepOrFacId(1);
+        if(iddep==-1){
+            System.out.println("Erro!");
+            return;
+        }
         idfac = getDepOrFacId(2);
+        if(idfac==-1){
+            System.out.println("Erro!");
+            return;
+        }
         System.out.printf("Introduza a morada da pessoa: ");
         address = sc.nextLine();
         System.out.printf("Introduza o nome da pessoa: ");
@@ -645,9 +838,9 @@ public class Consola {
 
     private int getDepOrFacId(int type) throws RemoteException{
         Scanner sc = new Scanner(System.in);
-        ArrayList<String> listId = null;
-        ArrayList<String> listNome = null;
-        ArrayList<ArrayList<String>> globalList = null;
+        ArrayList<String> listId;
+        ArrayList<String> listNome;
+        ArrayList<ArrayList<String>> globalList;
 
         int option;
         if(type==1) {
@@ -662,18 +855,22 @@ public class Consola {
             System.out.println("Qual a Faculdade?");
 
         }
+        if(listId.size()==0){
+            System.out.println("-> Nada a apresentar!");
+            return -1;
+        }
+
         do {
             for(int i = 0; i<listId.size(); i++){
                 System.out.println(i+1 + " - " + listNome.get(i));
             }
 
             System.out.printf("Opção: ");
-            String aux = sc.next();
-            option = toInt(aux);
-            if (option <= 0 || option > listId.size()) {
+            option = readInt();
+            if (option <= 0 || option > listId.size()-1) {
                 System.out.println("Insira um valor válido, çá xabor.\n");
             }
-        } while (option <= 0 || option > listId.size());
+        } while (option <= 0 || option > listId.size()-1);
 
         return toInt(listId.get(option-1));
     }
@@ -684,7 +881,7 @@ public class Consola {
         do {
             System.out.printf(" -> ");
             flag = true;
-            String aux = sc.next();
+            String aux = sc.nextLine();
             if ((type == 1 && aux.length() != 9) || (type == 2 && aux.length() != 8)) {
                 flag = false;
                 System.out.println("O número de digitos incorrecto!");
@@ -695,7 +892,7 @@ public class Consola {
                     System.out.println("Input inválido!");
                 }
             }
-        } while (flag == false);
+        } while (!flag);
         return phoneOrCCN;
     }
 
