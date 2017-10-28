@@ -132,7 +132,7 @@ public class Consola {
 
                 option = readInt();
                 if (option < 0 || option > 13) {
-                    System.out.println("Insira um valor válido, çá xabor.\n");
+                    System.out.println("Insira um valor válido, por favor.\n");
                 }
             } while (option < 0 || option > 13);
 
@@ -214,17 +214,17 @@ public class Consola {
             System.out.printf("Opção: ");
             operation = readInt();
             if (operation <= 0 || operation > 8) {
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
             }
         } while (operation <= 0 || operation > 8);
 
         switch(operation){
             case 1:
-                System.out.println("Novo nome do utilizador: ");
+                System.out.printf("Novo nome do utilizador:\n-> ");
                 newString = sc.nextLine();
                 break;
             case 2:
-                System.out.println("Nova morada do utilizador: ");
+                System.out.printf("Nova morada do utilizador:\n-> ");
                 newString = sc.nextLine();
                 break;
             case 3:
@@ -238,20 +238,20 @@ public class Consola {
                 break;
 
             case 5:
-                System.out.println("Nova validade do cartão de cidadão: ");
+                System.out.printf("Nova validade do cartão de cidadão:\n-> ");
                 newString = sc.nextLine();
                 break;
 
             case 6:
-                System.out.println("Novo departamento do utilizador: ");
+                System.out.printf("Novo departamento do utilizador:\n-> ");
                 newString=String.valueOf(getDepOrFacId(1));
                 break;
             case 7:
-                System.out.println("Novo departamento do utilizador: ");
+                System.out.printf("Novo departamento do utilizador:\n-> ");
                 newString=String.valueOf(getDepOrFacId(2));
                 break;
             case 8:
-                System.out.println("Nova pass do utilizador: ");
+                System.out.printf("Nova pass do utilizador:\n-> ");
                 newString = sc.nextLine();
                 break;
         }
@@ -276,7 +276,7 @@ public class Consola {
         System.out.printf("Introduza o número de cartão de cidadão!");
         ccn = getPhoneOrCCN(2);
 
-        System.out.println("Introduza a palavra pass: ");
+        System.out.printf("Introduza a palavra pass: ");
         String pass = sc.nextLine();
 
         voto = pickListFromElection(elecId, 2);
@@ -310,9 +310,8 @@ public class Consola {
     }
 
     private void checkVoteLocal() throws RemoteException{
-        int elecID = pickElections(4);
+        int elecID = pickElections(1); //TODO: devia ser 4 mas está a dar para votar em eleições que ainda nao abriram!
         if(elecID==-1){
-            System.out.println("Errooooo!");
             return;
         }
 
@@ -321,7 +320,6 @@ public class Consola {
         ccn = getPhoneOrCCN(2);
 
         if(r.checkTable(ccn,elecID)==-1){
-            System.out.println("Eeeeerro!");
         }else{
             System.out.println("Votou na mesa " + r.checkTable(ccn,elecID));
         }
@@ -348,7 +346,7 @@ public class Consola {
             System.out.printf("Opção: ");
             operation = readInt();
             if (operation <= 0 || operation > 2) {
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
             }
         } while (operation <= 0 || operation > 2);
 
@@ -393,7 +391,7 @@ public class Consola {
             System.out.printf("Opção: ");
             operation = readInt();
             if (operation <= 0 || operation > 2) {
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
             }
         } while (operation <= 0 || operation > 2);
 
@@ -432,11 +430,36 @@ public class Consola {
     private void manageTablePersonal() throws RemoteException{
         int operation;
         boolean verify = false;
-        int userID, tableID;
+        int actual, tableID, ccn;
+
+        do {
+            System.out.println("Que operação quer realizar? ");
+            System.out.println("1-Adicionar");
+            System.out.println("2-Editar");
+            System.out.printf("Opção: ");
+            operation = readInt();
+            if (operation <= 0 || operation > 2) {
+                System.out.println("Insira um valor válido, por favor.\n");
+            }
+        } while (operation <= 0 || operation > 2);
 
         int elecID =  pickElections(2);
         tableID = pickTableFromElection(elecID); 
-        userID = pickPersonFromTable(elecID,tableID); 
+        if(operation==1){
+            System.out.println("Insira o numero de cartão de cidadão da nova pessoa!");
+            ccn = getPhoneOrCCN(2);
+            verify = r.addToTable(tableID, ccn);
+       
+
+        }else{
+            actual = pickPersonFromTable(elecID,tableID);
+            if(actual==-1){
+                return;
+            }
+            System.out.println("Insira o numero de cartão de cidadão da nova pessoa!");
+            ccn = getPhoneOrCCN(2);
+            verify = r.manageTable(elecID, actual, ccn);
+        }
 
         if(verify) {
             System.out.println("Sucesso!");
@@ -449,7 +472,6 @@ public class Consola {
 
         Scanner sc = new Scanner(System.in);
         ArrayList<ArrayList<String>> usersList;
-        mesavoto_id = pickTableFromElection(elecID);
         usersList = r.showUserTable(elecID, mesavoto_id);
         
         ArrayList<String> tableIDList = usersList.get(0);
@@ -458,19 +480,20 @@ public class Consola {
         int option = 0;
 
         if(tableIDList.size()==0){
-            System.out.println("Não existe nenhuma mesa.");
+            System.out.println("Não existe nenhuma pessoa na mesa.");
             return -1;
         }
+
         while(flag) {
             flag=false;
-            System.out.println("Qual o utilizador?");
+            System.out.println("Qual o membro?");
             for (int i = 0; i < tableIDList.size(); i++) {
                     System.out.printf(i+1 + " - " + tableNameList.get(i));
             }
 
             option = readInt();
             if(option <= 0 || option > tableIDList.size()){
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
                 flag = true;
             }
         }
@@ -499,14 +522,13 @@ public class Consola {
             System.out.printf("Opção: ");
             operation = readInt();
             if (operation <= 0 || operation > 2) {
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
             }
         } while (operation <= 0 || operation > 2);
 
         if (operation == 1){
-            System.out.println("Nome da nova lista candidata: ");
+            System.out.printf("Nome da nova lista candidata: ");
             list = sc.nextLine();
-            System.out.println("Tipo da nova Lista candidata: ");
             do {
               System.out.println("Tipo da Lista:");
               System.out.println("1-Estudantes");
@@ -515,7 +537,7 @@ public class Consola {
               System.out.printf("Opção: ");
               listType = readInt();
               if (listType <= 0 || listType > 3) {
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
               }
             } while (listType <= 0 || listType > 3);
 
@@ -555,7 +577,7 @@ public class Consola {
             System.out.printf("Opção: ");
             option = readInt();
             if(option <= 0 || option > tableList.get(0).size()){
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
                 flag = true;
             }
         }
@@ -585,10 +607,10 @@ public class Consola {
             for (int i = 0; i < listsList.size(); i++) {
                 System.out.println(i + 1 + " -> " + listsList.get(i));
             }
-
+            System.out.printf("Opção: ");
             option = readInt();
             if(option<=0 || option > listsList.size()){
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
                 flag = true;
             }
         }
@@ -606,7 +628,6 @@ public class Consola {
                 break;
             case 2:
                 electionsList = r.viewFutureElections();
-                System.out.println(electionsList);
                 break;
             case 3:
                 electionsList= r.viewPastElections();
@@ -633,7 +654,7 @@ public class Consola {
             System.out.printf("Opção: ");
             option = readInt();
             if(option<=0 || option > idList.size()){
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
                 flag = true;
             }
         }
@@ -656,7 +677,7 @@ public class Consola {
             System.out.printf("Opção: ");
             electionType = readInt();
             if (electionType <= 0 || electionType > 4) {
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
             }
         } while (electionType <= 0 || electionType > 4);
 
@@ -721,7 +742,7 @@ public class Consola {
             System.out.printf("Opção: ");
             operation = readInt();
             if (operation <= 0 || operation > 3) {
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
             }
         } while (operation <= 0 || operation > 3);
 
@@ -732,7 +753,7 @@ public class Consola {
             System.out.printf("Opção: ");
             target = readInt();
             if (target <= 0 || target > 2) {
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
             }
         } while (target <= 0 || target > 2);
 
@@ -794,7 +815,7 @@ public class Consola {
             System.out.printf("Opção: ");
             option = readInt();
             if (option <= 0 || option > 3) {
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
             }
         } while (option < 0 || option > 3);
         System.out.printf("Introduza o contacto telefónico!");
@@ -875,7 +896,7 @@ public class Consola {
             System.out.printf("Opção: ");
             option = readInt();
             if (option <= 0 || option > listId.size()) {
-                System.out.println("Insira um valor válido, çá xabor.\n");
+                System.out.println("Insira um valor válido, por favor.\n");
             }
         } while (option <= 0 || option > listId.size());
 

@@ -41,4 +41,5 @@ public interface ServerInterface extends Remote{
     public ArrayList<ArrayList<String>> viewPastElections() throws RemoteException;
     public ArrayList<ArrayList<String>> viewFutureElections() throws RemoteException;
     public ArrayList<String> printListsFromElection(int id) throws RemoteException;
+    public boolean addToTable(int idTable, int numeroCC) throws RemoteException;
 }

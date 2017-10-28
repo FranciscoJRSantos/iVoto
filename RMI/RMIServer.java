@@ -717,11 +717,11 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   }
 
   /**
-   * 
-   * @param idTable
-   * @param idUser
-   * @param idNewUser
-   * @return
+   * Função que altera um utilizador que esta numa mesa
+   * @param idTable Recebe o ID da mesa de voto
+   * @param idUser Recebe o ID do utilizador que esta na mesa atualmente
+   * @param idNewUser Recebe o ID do utilizador que vai substituir
+   * @return Retorna true em caso de sucesso, e false em caso de insucesso
    * @throws RemoteException
    */
 
@@ -730,13 +730,22 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     //mudar a pessoa que está na mesa 
 
     boolean toClient = true;
-    String sql = "UPDATE User SET mesavoto_id = NULL WHERE mesavoto_id='" + idTable + "';";
+    String sql = "UPDATE User SET mesavoto_id = NULL WHERE mesavoto_id='" + idTable + "AND ID='" + idUser +"';";
     database.submitUpdate(sql);
     sql = "UPDATE User SET mesavoto_id='" + idTable + "' WHERE ID='" + idNewUser + "';";
     database.submitUpdate(sql);
 
     return toClient;
   }
+
+  /**
+   * Funçao que permite editar as caracteristicas de um utilizador
+   * @param idUser Recebe o ID da pessoa a editar
+   * @param newInfo Recebe a informação a editar como String
+   * @param flag Recebe uma flag para saber a caracteristica a alterar. 1 - nome | 2 - morada | 3 - contacto | 4 - numero do cartao de cidadao | 5 - validade do cartao de cidadao | 6 - departamento onde estuda | 7 - faculdade onde estuda
+   * @return Retorna true em caso de sucesso e false em caso de insucesso
+   * @throws RemoteException
+   */
 
   public boolean editPerson(int idUser, String newInfo, int flag) throws RemoteException{
     //edita a info de uma pessoa, manda a newinfo sempre como string e depois cabe ao server passar de string para int caso seja necessario. flag 1 - name, flag 2 - Address, flag 3 - phone, flag 4 - ccn, flag 5 - ccv, flag 6 - dep, flag 7 - pass
@@ -746,29 +755,29 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     switch (flag){
       case 1:
-        sql = "UPDATE User SET name='" + newInfo + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET name='" + newInfo + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 2:
-        sql = "UPDATE User SET morada='" + newInfo + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET morada='" + newInfo + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 3:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User SET contacto='" + newInfo + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET contacto='" + newInfo + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 4:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User SET numeroCC='" + aux + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET numeroCC='" + aux + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 5:
-        sql = "UPDATE User SET validadeCC='" + newInfo + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET validadeCC='" + newInfo + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 6:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User SET departamento_id='" + aux + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET departamento_id='" + aux + "' WHERE numeroCC='" + idUser + "';";
         break;
       case 7:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User SET faculdade_id='" + aux + "' WHERE ID='" + idUser + "';";
+        sql = "UPDATE User SET faculdade_id='" + aux + "' WHERE numeroCC='" + idUser + "';";
         break;
       default:
         break;
@@ -787,18 +796,18 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> aux2;
     ArrayList<String> aux3;
     ArrayList<String> idUser;
-    String sql6 = "SELECT ID FROM Lista WHERE ID='" + vote + "' AND eleicao_id='" + idElec +"';";
+    String sql6 = "SELECT ID FROM Lista WHERE nome='" + vote + "' AND eleicao_id='" + idElec +"';";
     String sql7 = "SELECT ID FROM User WHERE numeroCC='" + cc + "';";
     idUser = database.submitQuery(sql7);
     aux3 = database.submitQuery(sql6);
     if (!aux3.isEmpty()){
       String sql1 = "UPDATE Lista SET votos = votos +1 WHERE nome='" + vote + "' AND eleicao_id='" + idElec + "';";
 
-      String sql3 = "SELECT hasVoted FROM User_Eleicao WHERE numeroCC='" + cc + "' AND eleicao_id='" +  idElec + "';";
+      String sql3 = "SELECT hasVoted FROM User_Eleicao WHERE user_id='" + idUser.get(0) + "' AND eleicao_id='" +  idElec + "';";
       aux2 = database.submitQuery(sql3);
       System.out.println(aux2);
-      if (!aux2.isEmpty()){
-        String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id,whenVoted) VALUES('" + idUser.get(0) + "'," + idElec + ",True,'" + 0 + "',NOW());";
+      if (aux2.isEmpty()){
+        String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id,whenVoted) VALUES('" + idUser.get(0) + "'," + idElec + ",true,null,NOW());";
         database.submitUpdate(sql5);
         database.submitUpdate(sql1);
         toClient = true;
@@ -1001,6 +1010,20 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return true;
   }
+
+  public boolean addToTable(int idTable, int numeroCC) throws RemoteException{
+
+    String aux = "SELECT ID FROM User WHERE numeroCC='" + numeroCC + "';";
+    ArrayList<String> user_id = database.submitQuery(aux);
+    if (user_id.isEmpty()){
+      return false;
+    }
+    String sql = "UPDATE User SET mesavoto_id='" + idTable + "' WHERE ID='" + user_id.get(0) + "';";
+    database.submitUpdate(sql);
+
+    return true;
+  }
+
 
   class UDPConnection extends Thread {
 
