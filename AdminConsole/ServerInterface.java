@@ -11,7 +11,7 @@ public interface ServerInterface extends Remote{
     public String vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException;
 
     // Admin Console - todas as boolean retornam true em caso de sucesso e false em caso de insucesso
-    public boolean addPerson(String name, String Address, int phone, int ccn, Date ccv, int dep, int fac, String pass, int type) throws RemoteException; //registar pessoa, type 1 - docente, type 2 - funcionario, type 3 - aluno. ccn - numero do cc, ccv - validade do cc
+    public boolean addPerson(String name, String Address, int phone, int ccn, String ccv, int dep, int fac, String pass, int type) throws RemoteException; //registar pessoa, type 1 - docente, type 2 - funcionario, type 3 - aluno. ccn - numero do cc, ccv - validade do cc
     public boolean addDepFac(int faculdade_id, String newName, int flag) throws RemoteException; //add departamento / faculdade. flag 1 - dep, flag 2 - fac
     public boolean rmDepFac(int dep, int flag) throws RemoteException; //remove departamento / faculdade. flag 1 - dep, flag 2 - fac
     public boolean editDepFac(int dep, String newName, int flag) throws RemoteException; //edita nome de departamento / faculdade. flag 1 - dep, flag 2 - fac
@@ -32,8 +32,8 @@ public interface ServerInterface extends Remote{
     public boolean editPerson(int idUser, String newInfo, int flag) throws RemoteException; //edita a info de uma pessoa, manda a newinfo sempre como string e depois cabe ao server passar de string para int caso seja necessario. flag 1 - name, flag 2 - Address, flag 3 - phone, flag 4 - ccn, flag 5 - ccv, flag 6 - dep, flag 7 - pass
     public ArrayList<String> tableMembers(int idTable) throws RemoteException; //retorna a lista de pessoas que estão na mesa
     public boolean manageTable(int idTable, int idUser, int idNewUser) throws RemoteException; //mudar a pessoa que está na mesa
-    public ArrayList<String> verFaculdades() throws RemoteException;
-    public ArrayList<String> verDepartamentos() throws RemoteException;
+    public ArrayList<ArrayList<String>> verFaculdades() throws RemoteException;
+    public ArrayList<ArrayList<String>> verDepartamentos() throws RemoteException;
     public boolean createList(String nome, int tipo,int eleicao_id) throws RemoteException;
     public ArrayList<String> showTables(int eleicao_id) throws RemoteException;
     public ArrayList<ArrayList<String>> showUserTable(int eleicao_id, int mesavoto_id) throws RemoteException;
