@@ -184,6 +184,7 @@ public class Consola {
         Scanner sc = new Scanner(System.in);
         int elecId = pickElections(2);
         String newInput;
+        boolean verify = false;
 
         do {
             System.out.println("O que quer editar?");
@@ -202,19 +203,25 @@ public class Consola {
             case 1:
                 System.out.printf("Insira o novo titulo: ");
                 newInput = sc.nextLine();
-                //r.changeElectionsText(elecId, newInput, 1);
+                verify = r.changeElectionsText(elecId, newInput, 1);
             case 2:
                 System.out.printf("Insira a nova descrição: ");
                 newInput = sc.nextLine();
-                //r.changeElectionsText(elecId, newInput, 2);
+                verify = r.changeElectionsText(elecId, newInput, 2);
             case 3:
                 System.out.printf("Insira a nova data de início: ");
                 newInput = sc.nextLine();
-                //r.changeElectionsDates(elecId, newInput, 1);
+                verify = r.changeElectionsDates(elecId, newInput, 1);
             case 4:
                 System.out.printf("Insira a nova data de fim: ");
                 newInput = sc.nextLine();
-                //r.changeElectionsDates(elecId, newInput, 2);
+                verify = r.changeElectionsDates(elecId, newInput, 2);
+        }
+
+        if(verify){
+            System.out.println("Sucesso!");
+        }else{
+            System.out.println("Erro!");
         }
     }
 
@@ -269,11 +276,11 @@ public class Consola {
             list = pickListFromElection(electionId);
         }
 
-        //if(r.manageList(electionId, list, operation)) {
-        //    System.out.println("Sucesso!");
-        //}else{
-        //    System.out.println("Erro!");
-        //}
+        if(r.manageList(electionId, list, operation)) {
+            System.out.println("Sucesso!");
+        }else{
+            System.out.println("Erro!");
+        }
     }
 
     private int pickTableFromElection(int elecID) throws RemoteException{
@@ -384,16 +391,22 @@ public class Consola {
         switch (electionType){
             case 1:
                 id = getDepOrFacId(1);
-                //verify = r.criaEleiçãoNE(beginning, end, title, desc, id)
+                verify = r.criaEleiçãoNE(beginning, end, title, desc, id);
             case 2:
-                //verify = r.criaEleiçãoCG(beginning, end, title, desc)
+                verify = r.criaEleiçãoCG(beginning, end, title, desc);
             case 3:
                 id = getDepOrFacId(1);
-                //verify = r.criaEleiçãoDD(beginning, end, title, desc, id)
+                verify = r.criaEleiçãoDD(beginning, end, title, desc, id);
             case 4:
                 id = getDepOrFacId(2);
-                //verify = r.criaEleiçãoDF(beginning, end, title, desc, id)
+                verify = r.criaEleiçãoDF(beginning, end, title, desc, id);
 
+        }
+
+        if(verify){
+            System.out.println("Sucesso!");
+        }else{
+            System.out.println("Erro!");
         }
 
     }
@@ -402,7 +415,7 @@ public class Consola {
         Scanner sc = new Scanner(System.in);
         int operation, target, id;
         String name;
-        boolean verify;
+        boolean verify = false;
 
         do {
             System.out.println("Que operação quer realizar? ");
@@ -430,12 +443,18 @@ public class Consola {
         switch (operation){
             case 1:
                 name = sc.nextLine();
-                //verify = r.addDepFac(id, name, target);
+                verify = r.addDepFac(id, name, target);
             case 2:
-                //verify = r.rmDepFac(id, target);
+                verify = r.rmDepFac(id, target);
             case 3:
                 name = sc.nextLine();
-                //verify = r.editDepFac(id, name, target);
+                verify = r.editDepFac(id, name, target);
+        }
+
+        if(verify){
+            System.out.println("Sucesso!");
+        }else{
+            System.out.println("Erro!");
         }
     }
 
@@ -468,11 +487,11 @@ public class Consola {
         System.out.println("Validade do Cartão de Cidadão");
         ccv = getData();
 
-        //if(r.addPerson(nome, address, phone, ccn, ccv, iddep, idfac, pass, option)){
-        //    System.out.println("Sucesso!");
-        //}else{
-        //    System.out.println("Erro!");
-        //}
+        if(r.addPerson(nome, address, phone, ccn, ccv, iddep, idfac, pass, option)){
+            System.out.println("Sucesso!");
+        }else{
+            System.out.println("Erro!");
+        }
 
 
     }
