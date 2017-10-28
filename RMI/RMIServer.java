@@ -448,6 +448,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return container;
   }
+
   public ArrayList<ArrayList<String>> verDepartamentos() throws RemoteException{
 
     ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
@@ -802,7 +803,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return true;
   }
 
-
   public boolean criaEleiçãoDD(String beginning, String end, String title, String description, int idDep) throws RemoteException{
 
     //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
@@ -819,7 +819,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return true;
   }
-
 
   class UDPConnection extends Thread {
 
