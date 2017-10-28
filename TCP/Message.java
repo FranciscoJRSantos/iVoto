@@ -9,7 +9,7 @@ public class Message {
     private ArrayList<String> sList;
     private Boolean isValid = false;
 
-    //type|i1|i2|s1|s2|list[0]|list[1]|list[2]|...
+    //type|i1|i2|s1|s2|sList[0]|sList[1]|sList[2]|...
     //Client -> Server: 0 login; 1 vote.
     //Server -> Client: 0 confirmation; 1 error; 2 blocked; 3 not logged; 4 info; 5 unblocked
     public Message(String msg) {

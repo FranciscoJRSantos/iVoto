@@ -1,4 +1,3 @@
-import javax.xml.bind.SchemaOutputResolver;
 import java.net.*;
 import java.io.*;
 import java.rmi.*;
@@ -21,7 +20,6 @@ public class TCPServer {
     static final List<Connection> connectionList = Collections.synchronizedList(new ArrayList<Connection>());
 
     public static void main(String args[]) {
-        //TODO: Callbacks for admin console?
         int connectionCount = 0;
         int choice;
         TCPConfigLoader c = new TCPConfigLoader();
@@ -30,6 +28,7 @@ public class TCPServer {
 
         while (!connectToRMI());
 
+		//request elections list and ask for choice
         while(true) {
             ArrayList<ArrayList<String>> electionData = requestElectionsList();
             if(electionData==null) continue;
@@ -60,6 +59,7 @@ public class TCPServer {
             break;
         }
 
+		//request list of voting tables of picked election and ask for choice
         while (true) {
             ArrayList<String> tableIDList = requestTableList();
             if(tableIDList==null) continue;
@@ -86,6 +86,7 @@ public class TCPServer {
             break;
         }
 
+		//request picked table's staff list and ask for choice + login
         while (true) {
             ArrayList<ArrayList<String>> staffData = requestTableStaff();
             if(staffData==null) continue;
@@ -124,9 +125,11 @@ public class TCPServer {
             }
             break;
         }
-
+		
+		//Open a new thread for administration commands (checking CCs and unblocking terminals)
         new AdminCommands();
 
+		//Accept all new connections, store them in a list, and create a thread to handle them
         try {
             System.out.println("[STATUS] Listening to port" + serverPort);
             ServerSocket listenSocket = new ServerSocket(serverPort);
@@ -143,6 +146,7 @@ public class TCPServer {
     }
 
     private static boolean connectToRMI() {
+		//try to connect for 30 seconds, stop trying after that
         long timestamp = System.currentTimeMillis();
         boolean failed = false;
         while (true) {
@@ -202,7 +206,7 @@ public class TCPServer {
     }
 
     static String checkCC(int cc) {
-        //return null if not found. Return name otherwise!
+        //returns null if not found/not allowed. Returns name otherwise!
         while (true) {
             try {
                 return r.checkID(cc, electionID);
@@ -247,6 +251,7 @@ public class TCPServer {
     }
 
     static int readInt() {
+		//keeps asking for input until it receives an int
         Scanner sc = new Scanner(System.in);
         String aux;
         int num;
@@ -262,6 +267,7 @@ public class TCPServer {
     }
 
     static void enterToContinue() {
+		//Halts the program until enter is pressed
         System.out.println("Press enter to continue...");
         Scanner sc = new Scanner(System.in);
         sc.nextLine();
@@ -269,7 +275,7 @@ public class TCPServer {
     }
 }
 
-//= Thread para tratar de cada canal de comunica��o com um cliente
+//Starts a thread to handle each new connection
 class Connection extends Thread {
     public int terminalID;
     private BufferedReader in;
@@ -298,6 +304,7 @@ class Connection extends Thread {
         }
     }
 
+	//the thread is always blocked waiting for a new message from the client. If connection is broken, the thread is closed
     @Override
     public void run() {
         try {
@@ -310,6 +317,7 @@ class Connection extends Thread {
         }
     }
 
+	//as soon as a message is received it is interpreted and then answered
     private void answerMessage(String s) {
         //type|i1|i2|s1|s2|list[0]|list[1]|list[2]|...
 
@@ -319,6 +327,7 @@ class Connection extends Thread {
             return;
         }
 
+		//notifies timer thread of new activity
         synchronized (recentActivity) {
             recentActivity.set(true);
             recentActivity.notify();
@@ -405,16 +414,16 @@ class Connection extends Thread {
         return true;
     }
 
+	//called when the TCP connection is broken. Ends the thread gracefully and any possibly existing timer threads.
     private void endConnection() {
-        synchronized (TCPServer.connectionList) {
-            TCPServer.connectionList.remove(this);
-        }
+        TCPServer.connectionList.remove(this);
         if (timer != null) timer.interrupt();
         System.out.printf("[Warning] Connection with terminal #%d was closed. Removed from the list of terminals\n", terminalID);
     }
 
 }
 
+//A thread for keeping track of message activity. Blocks the terminal if inactive for too long
 class TimeoutTimer extends Thread {
     //120 seconds = 120000 ms
     private static final int TIMEOUT_VALUE = 120000;
@@ -454,6 +463,7 @@ class TimeoutTimer extends Thread {
     }
 }
 
+//thread for adming commands
 class AdminCommands extends Thread {
     AdminCommands() {
         this.start();
