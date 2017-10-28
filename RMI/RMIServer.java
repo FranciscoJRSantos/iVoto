@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
+import java.util.concurrent.TimeUnit;
 
 public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
@@ -36,11 +37,23 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     dbPort = newConfig.getDBPort();
     database = new DatabaseConnection(dbIP,dbPort);
     startRMIServer();
-
   }
 
   public void checkElectionStatus(){
+    
+    while(true){
+      try{
+        TimeUnit.SECONDS.sleep(100000);
+      } catch (InterruptedException ie){
+        ie.printStackTrace();
+      }
+      String sql1 = "UPDATE Eleicao SET active=true WHERE inicio > NOW() AND fim < NOW();";
+      String sql2 = "UPDATE Eleicao SET active=false WHERE inicio < NOW() OR fim > NOW();";
 
+      database.submitUpdate(sql1);
+      database.submitUpdate(sql2);
+
+    }
   }
 
   public static void main(String args[]) throws RemoteException{
@@ -62,6 +75,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       if (this.heartbeat == null){
         this.startUDPConnection();
       }
+      this.checkElectionStatus();
     } catch(ExportException ee){
 
       this.setMainServer(false);
@@ -265,16 +279,17 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> aux1;
     ArrayList<String> aux2;
     ArrayList<String> aux3;
-    String sql6 = "SELECT ID FROM Lista WHERE nome='" + lista + "';";
+    String sql6 = "SELECT ID FROM Lista WHERE nome='" + lista + "' AND eleicao_id='" + eleicao_id +"';";
     aux3 = database.submitQuery(sql6);
     if (!aux3.isEmpty()){
-      String sql1 = "UPDATE Lista SET votos = votos +1 WHERE nome='" + lista + "';";
+      String sql1 = "UPDATE Lista SET votos = votos +1 WHERE nome='" + lista + "' AND eleicao_id='" + eleicao_id + "';";
       String sql2 = "SELECT ID FROM User WHERE numeroCC='" + cc + "';";
 
       aux1 = database.submitQuery(sql2);
       String sql3 = "SELECT hasVoted FROM User_Eleicao WHERE user_id='" + aux1.get(0) + "' AND eleicao_id='" +  eleicao_id + "';";
       aux2 = database.submitQuery(sql3);
-      if (aux2.isEmpty()){
+      System.out.println(aux2);
+      if (!aux2.isEmpty()){
         String sql5 = "INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id,whenVoted) VALUES('" + aux1.get(0) + "'," + eleicao_id + ",True,'" + mesavoto_id + "',NOW());";
         database.submitUpdate(sql5);
         database.submitUpdate(sql1);
@@ -501,7 +516,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     String sql;
 
     if (flag == 1){
-      sql = "INSERT INTO Lista (nome,tipo) VALUES ('" + List + "','" + listType + "');"; 
+      sql = "INSERT INTO Lista (nome,tipo,eleicao_id) VALUES ('" + List + "','" + listType + "','"+ idElec + "');"; 
       database.submitUpdate(sql);
     }
     else if(flag ==2){

@@ -345,7 +345,7 @@ public class Consola {
 
     private void manageLists() throws RemoteException{
         Scanner sc = new Scanner(System.in);
-        int electionId = pickElections(1);
+        int electionId = pickElections(2);
         int operation;
         int listType=0;
         String list;
