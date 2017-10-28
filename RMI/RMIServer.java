@@ -454,13 +454,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> dateInicio;
     ArrayList<String> dateFim;
 
-    String sql1 = "SELECT ID FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
+    String sql1 = "SELECT ID FROM Eleicao WHERE active = true OR inicio >= NOW();";
     ID = database.submitQuery(sql1);
-    sql1 = "SELECT titulo FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
+    sql1 = "SELECT titulo FROM Eleicao WHERE active = true OR inicio >= NOW();";
     titulos = database.submitQuery(sql1);
-    sql1 = "SELECT inicio FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
+    sql1 = "SELECT inicio FROM Eleicao WHERE active = true OR inicio >= NOW();";
     dateInicio = database.submitQuery(sql1);
-    sql1 = "SELECT fim FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
+    sql1 = "SELECT fim FROM Eleicao WHERE active = true OR inicio >= NOW();";
     dateFim = database.submitQuery(sql1);
 
     container.add(ID);
@@ -485,13 +485,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> dateInicio;
     ArrayList<String> dateFim;
 
-    String sql1 = "SELECT ID FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    String sql1 = "SELECT ID FROM Eleicao WHERE active = true OR inicio < NOW();";
     ID = database.submitQuery(sql1);
-    sql1 = "SELECT titulo FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    sql1 = "SELECT titulo FROM Eleicao WHERE active = true OR inicio < NOW();";
     titulos = database.submitQuery(sql1);
-    sql1 = "SELECT inicio FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    sql1 = "SELECT inicio FROM Eleicao WHERE active = true OR inicio < NOW();";
     dateInicio = database.submitQuery(sql1);
-    sql1 = "SELECT fim FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    sql1 = "SELECT fim FROM Eleicao WHERE active = true OR inicio < NOW();";
     dateFim = database.submitQuery(sql1);
 
     container.add(ID);
@@ -547,13 +547,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> dateInicio;
     ArrayList<String> dateFim;
 
-    String sql1 = "SELECT ID FROM Eleicao WHERE inicio < CURDATE();";
+    String sql1 = "SELECT ID FROM Eleicao WHERE inicio < NOW();";
     ID = database.submitQuery(sql1);
-    sql1 = "SELECT titulo FROM Eleicao WHERE inicio < CURDATE();";
+    sql1 = "SELECT titulo FROM Eleicao WHERE inicio < NOW();";
     titulos = database.submitQuery(sql1);
-    sql1 = "SELECT inicio FROM Eleicao WHERE inicio < CURDATE();";
+    sql1 = "SELECT inicio FROM Eleicao WHERE inicio < NOW();";
     dateInicio = database.submitQuery(sql1);
-    sql1 = "SELECT fim FROM Eleicao WHERE inicio < CURDATE();";
+    sql1 = "SELECT fim FROM Eleicao WHERE inicio < NOW();";
     dateFim = database.submitQuery(sql1);
 
     container.add(ID);
