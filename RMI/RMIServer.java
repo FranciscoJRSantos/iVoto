@@ -351,6 +351,80 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return container;
   }
 
+  public ArrayList<ArrayList<String>> viewPastCurrentElections() throws RemoteException{
+
+    ArrayList<ArrayList<String>> container = new ArrayList<>();
+    ArrayList<String> ID;
+    ArrayList<String> titulos;
+    ArrayList<String> dateInicio;
+    ArrayList<String> dateFim;
+
+    String sql1 = "SELECT ID FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    ID = database.submitQuery(sql1);
+    sql1 = "SELECT titulo FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    titulos = database.submitQuery(sql1);
+    sql1 = "SELECT inicio FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    dateInicio = database.submitQuery(sql1);
+    sql1 = "SELECT fim FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    dateFim = database.submitQuery(sql1);
+
+    container.add(ID);
+    container.add(titulos);
+    container.add(dateInicio);
+    container.add(dateFim);
+
+    return container;
+  }
+
+  public ArrayList<ArrayList<String>> viewFutureElections() throws RemoteException{
+
+    ArrayList<ArrayList<String>> container = new ArrayList<>();
+    ArrayList<String> ID;
+    ArrayList<String> titulos;
+    ArrayList<String> dateInicio;
+    ArrayList<String> dateFim;
+
+    String sql1 = "SELECT ID FROM Eleicao WHERE inicio > CURDATE();";
+    ID = database.submitQuery(sql1);
+    sql1 = "SELECT titulo FROM Eleicao WHERE inicio > CURDATE();";
+    titulos = database.submitQuery(sql1);
+    sql1 = "SELECT inicio FROM Eleicao WHERE inicio > CURDATE();";
+    dateInicio = database.submitQuery(sql1);
+    sql1 = "SELECT fim FROM Eleicao WHERE inicio > CURDATE();";
+    dateFim = database.submitQuery(sql1);
+
+    container.add(ID);
+    container.add(titulos);
+    container.add(dateInicio);
+    container.add(dateFim);
+
+    return container;
+  }
+
+  public ArrayList<ArrayList<String>> viewPastElections() throws RemoteException{
+
+    ArrayList<ArrayList<String>> container = new ArrayList<>();
+    ArrayList<String> ID;
+    ArrayList<String> titulos;
+    ArrayList<String> dateInicio;
+    ArrayList<String> dateFim;
+
+    String sql1 = "SELECT ID FROM Eleicao WHERE inicio < CURDATE();";
+    ID = database.submitQuery(sql1);
+    sql1 = "SELECT titulo FROM Eleicao WHERE inicio < CURDATE();";
+    titulos = database.submitQuery(sql1);
+    sql1 = "SELECT inicio FROM Eleicao WHERE inicio < CURDATE();";
+    dateInicio = database.submitQuery(sql1);
+    sql1 = "SELECT fim FROM Eleicao WHERE inicio < CURDATE();";
+    dateFim = database.submitQuery(sql1);
+
+    container.add(ID);
+    container.add(titulos);
+    container.add(dateInicio);
+    container.add(dateFim);
+
+    return container;
+  }
   public ArrayList<ArrayList<String>> verDepartamentos() throws RemoteException{
 
     ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();

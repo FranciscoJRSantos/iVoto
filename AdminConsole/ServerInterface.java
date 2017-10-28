@@ -1,6 +1,5 @@
 import java.rmi.*;
 import java.util.*;
-import java.sql.Date;
 
 public interface ServerInterface extends Remote{
     public boolean isConnected() throws RemoteException;
