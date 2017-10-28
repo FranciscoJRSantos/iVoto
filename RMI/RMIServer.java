@@ -563,28 +563,29 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     switch (flag){
       case 1:
-        sql = "UPDATE User WHERE ID='" + idUser + "' SET name='" + newInfo + "';";
+        sql = "UPDATE User SET name='" + newInfo + "' WHERE ID='" + idUser + "';";
         break;
       case 2:
-        sql = "UPDATE User WHERE ID='" + idUser + "' SET morada='" + newInfo + "';";
+        sql = "UPDATE User SET morada='" + newInfo + "' WHERE ID='" + idUser + "';";
         break;
       case 3:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User WHERE ID='" + idUser + "' SET contacto='" + aux + "';";
+        sql = "UPDATE User SET contacto='" + newInfo + "' WHERE ID='" + idUser + "';";
         break;
       case 4:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User WHERE ID='" + idUser + "' SET numeroCC='" + aux + "';";
+        sql = "UPDATE User SET numeroCC='" + aux + "' WHERE ID='" + idUser + "';";
         break;
       case 5:
+        sql = "UPDATE User SET validadeCC='" + newInfo + "' WHERE ID='" + idUser + "';";
         break;
       case 6:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User WHERE ID='" + idUser + "' SET departamento_id='" + aux + "';";
+        sql = "UPDATE User SET departamento_id='" + aux + "' WHERE ID='" + idUser + "';";
         break;
       case 7:
         aux = Integer.parseInt(newInfo);
-        sql = "UPDATE User WHERE ID='" + idUser + "' SET hashed_password='" + aux + "';";
+        sql = "UPDATE User SET faculdade_id='" + aux + "' WHERE ID='" + idUser + "';";
         break;
       default:
         break;
