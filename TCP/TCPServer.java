@@ -232,8 +232,7 @@ public class TCPServer {
     }
 
     static String registerVote(int cc, String candidateName) {
-        //TODO send to RMI along with electionID (static), tableID (static)
-        //receive voted list (name, null or white)
+        //TODO: receive voted list (name, null or white)
         while (true) {
             try {
                 return r.vote(cc, candidateName, electionID, tableID);
@@ -350,15 +349,15 @@ class Connection extends Thread {
                 //TODO: Send vote, allow for null our white votes
                 String aux = TCPServer.registerVote(cc, m.getS1());
                 if (aux != null) {
-                    out.printf("Vote for candidate %s registered successfully.\n", aux);
+                    out.printf("%s vote registered successfully.\n", aux);
                     blockTerminal();
                 } else {
-                    out.println("An error happened while voting. Please vote again.");
+                    out.println("An error happened while voting. Please try to vote again.");
                     break;
                 }
                 break;
             default:
-                out.println("Type non-existent!");
+                out.println("Message type non-existent!");
                 break;
         }
     }
@@ -372,7 +371,6 @@ class Connection extends Thread {
         timer.interrupt();
         System.out.printf("[STATUS] Terminal #%d was blocked.\n", terminalID);
         out.println("This terminal has been blocked.");
-        //TODO Still testing this
         return true;
     }
 
@@ -384,7 +382,6 @@ class Connection extends Thread {
         timer = new TimeoutTimer(this);
         System.out.printf("Unblocked terminal #%d. Timeout will occur if inactive for 120 seconds\n", terminalID);
         out.printf("This terminal has been unlocked for %s (CC: %d). Timeout will occur if inactive for 120 seconds\nPlease login:\nUsage: 0|0|0|[username]|[password]\n", name, cc);
-        //TODO Still testing this
         return true;
     }
 
@@ -444,9 +441,6 @@ class AdminCommands extends Thread {
 
     @Override
     public void run() {
-        //TODO: Only allow unblocking if election is in progress!
-        //Maybe a thread?
-
         while (true) {
             int cc = 0;
             String name = null;
