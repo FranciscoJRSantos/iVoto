@@ -987,11 +987,11 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   }
 
   /**
-   *
-   * @param dep
-   * @param newName
-   * @param flag
-   * @return
+   * Editar um departamento / faculdade
+   * @param dep Recebe o ID do departamento / faculdade
+   * @param newName Recebe o novo nome do departamento / faculdade
+   * @param flag Recebe a flag que identifica se é um departamento ou faculdade a alterar
+   * @return Retorna true em caso de sucesso, caso contrario retorna falso
    * @throws RemoteException
    */
 
@@ -1012,6 +1012,17 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return true;
   }
 
+  /**
+   * Cria uma eleição para um Nucleo de Estudantes
+   * @param beginning Recebe a data de inicio como String
+   * @param end Recebe a data de fim como String
+   * @param title Recebe o titulo da eleiçao como uma String
+   * @param description Recebe a descrição da eleição como uma String
+   * @param dep Recebe o ID do departamento ha qual esta associada a eleiçao de Nucleo de Estudantes
+   * @return Retorna true em caso de sucesso e false em caso de insucesso
+   * @throws RemoteException
+   */
+
   public boolean criaEleiçãoNE(String beginning, String end, String title, String description, int dep) throws RemoteException{
 
     //cria eleição Nucleo de estudantes. . As eleições para núcleo de estudantes decorrem num único departamento e podem votar apenas os estudantes desse departamento.
@@ -1031,6 +1042,16 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
+  /**
+   * Cria uma eleição para o Conselho Geral
+   * @param beginning Recebe a data de inicio como String
+   * @param end Recebe a data de fim como String
+   * @param title Recebe o titulo da eleição como String
+   * @param description Recebe a descrição da eleição como String
+   * @return Retorna true em caso de sucesso e false em caso de insucesso
+   * @throws RemoteException
+   */
+
   public boolean criaEleiçãoCG(String beginning, String end, String title, String description) throws RemoteException{
 
     // os estudantes votam apenas nas listas de estudantes, os docentes votam apenas nas listas de docentes, e os funcionários votam apenas nas listas de funcionários.
@@ -1045,6 +1066,17 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return true;
 
   }
+
+  /**
+   * Cria uma eleição para a Direção de uma Faculdade
+   * @param beginning Recebe a data de inicio como String
+   * @param end Recebe a data de fim como String
+   * @param title Recebe o titulo da eleição como String
+   * @param description Recebe a descrição da eleição como String
+   * @param idFac Recebe o ID da faculdade onde se vai decorrer a eleição
+   * @return Em caso de sucesso retorna true caso contrario retorna false
+   * @throws RemoteException
+   */
 
   public boolean criaEleiçãoDF(String beginning, String end, String title, String description, int idFac) throws RemoteException{
 
@@ -1063,6 +1095,17 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return true;
   }
 
+  /**
+   * Cria uma eleição para a Direção de um Departamento
+   * @param beginning Recebe a data de inicio como String
+   * @param end Recebe a data de fim como String
+   * @param title Recebe o titulo da eleição como String
+   * @param description Recebe a descrição da eleição como String
+   * @param idDep Recebe o ID do Departamento onde vai decorrer a eleição
+   * @return Em caso de sucesso retorna true caso contrario retorna false
+   * @throws RemoteException
+   */
+
   public boolean criaEleiçãoDD(String beginning, String end, String title, String description, int idDep) throws RemoteException{
 
     //cria eleição para a direção do departamento, concorrem e votam docentes desse departamento
@@ -1079,6 +1122,14 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     return true;
   }
+
+  /**
+   * Adiciona uma mesa de voto a uma eleição
+   * @param idTable Recebe o ID da mesa de voto
+   * @param numeroCC Recebe o numero do cartao de cidadao do utilizador que vai estar na mesa de voto
+   * @return Em caso de sucesso retorna true, caso contrario retorna false
+   * @throws RemoteException
+   */
 
   public boolean addToTable(int idTable, int numeroCC) throws RemoteException{
 
