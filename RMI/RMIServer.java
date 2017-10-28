@@ -289,8 +289,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       String sql3 = "SELECT hasVoted FROM User_Eleicao WHERE user_id='" + aux1.get(0) + "' AND eleicao_id='" +  eleicao_id + "';";
       aux2 = database.submitQuery(sql3);
       System.out.println(aux2);
-      if (!aux2.isEmpty()){
-        String sql5 = "INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id,whenVoted) VALUES('" + aux1.get(0) + "'," + eleicao_id + ",True,'" + mesavoto_id + "',NOW());";
+      if (aux2.isEmpty()){
+        String sql5 = "INSERT INTO User_Eleicao (user_id,eleicao_id,hasVoted,mesavoto_id,whenVoted) VALUES('" + aux1.get(0) + "','" + eleicao_id + "',true,'" + mesavoto_id + "',NOW());";
         database.submitUpdate(sql5);
         database.submitUpdate(sql1);
         toClient = lista;
@@ -332,7 +332,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> aux;
     //TODO: Get ID from CC
 
-    String sql = "SELECT ID FROM User_Eleicao WHERE user_id='" + idUser + "' AND eleicao_id='" + idElec + "'";
+    String sql = "SELECT mesavoto_id FROM User_Eleicao WHERE user_id='" + idUser + "' AND eleicao_id='" + idElec + "'";
     aux = database.submitQuery(sql);
     if (aux.isEmpty()){
       mesa = -1;
@@ -634,12 +634,22 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return true;
   }
 
-  public ArrayList<String> checkResults(int idElec) throws RemoteException{
+  public ArrayList<ArrayList<String>> checkResults(int idElec) throws RemoteException{
     //recebe uma lista com [[lista,nº de votos],...]. return [[null,null]] em caso de insucesso
-    ArrayList<String> aux;
-    String sql = "SELECT nome,votos FROM Lista WHERE eleicao_id='" + idElec +"';";
+    ArrayList<ArrayList<String>> toClient = new ArrayList<ArrayList<String>>();
+    ArrayList<String> listaNome;
+    ArrayList<String> listaVotos;
 
-    return database.submitQuery(sql);
+    String sqlNome = "SELECT nome FROM Lista WHERE eleicao_id='" + idElec +"' ORDER BY votos DESC;";
+    String sqlVotos = "SELECT votos FROM Lista WHERE eleicao_id'" + idElec +"' ORDER BY votos DESC;";
+
+    listaNome = database.submitQuery(sqlNome);
+    listaVotos = database.submitQuery(sqlVotos);
+
+    toClient.add(listaNome);
+    toClient.add(listaVotos);
+
+    return toClient;
   }
 
   public int TableInfo(int idTable, int idElec) throws RemoteException{

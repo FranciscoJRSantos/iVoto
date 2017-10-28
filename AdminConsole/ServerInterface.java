@@ -25,7 +25,7 @@ public interface ServerInterface extends Remote{
     public int checkTable(int idUser, int idElec) throws RemoteException; //saber onde uma pessoa votou, retorna -1 em caso de insucesso
     public java.util.Date showHour(int idUser, int idElec) throws RemoteException; //saber quando uma pessoa votou, retorna algo que indique erro :) nao sei :) fds :)
     public int TableInfo(int idTable, int idElec) throws RemoteException; //realtime info sobre o estado das mesas (return -1) if down, e numero de votos feitos naquela mesa (return n)
-    public ArrayList<String> checkResults(int idElec) throws RemoteException; //recebe uma lista com [[lista,nº de votos],...]. return [[null,null]] em caso de insucesso
+    public ArrayList<ArrayList<String>> checkResults(int idElec) throws RemoteException;
     public boolean anticipatedVote(int idElec, int idUser, int vote, String pass) throws RemoteException; //vote antecipado. o int vote é um int da lista de listas disponiveis retornada pela "viewListsFromElection"
     public boolean editPerson(int idUser, String newInfo, int flag) throws RemoteException; //edita a info de uma pessoa, manda a newinfo sempre como string e depois cabe ao server passar de string para int caso seja necessario. flag 1 - name, flag 2 - Address, flag 3 - phone, flag 4 - ccn, flag 5 - ccv, flag 6 - dep, flag 7 - pass
     public ArrayList<String> tableMembers(int idTable) throws RemoteException; //retorna a lista de pessoas que estão na mesa
