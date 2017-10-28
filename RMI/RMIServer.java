@@ -43,7 +43,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     
     while(true){
       try{
-        TimeUnit.SECONDS.sleep(100000);
+        TimeUnit.SECONDS.sleep(10);
       } catch (InterruptedException ie){
         ie.printStackTrace();
       }
@@ -78,12 +78,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       this.checkElectionStatus();
     } catch(ExportException ee){
 
-      this.setMainServer(false);
-      System.out.println(this.mainServer);
-      if (this.heartbeat == null){
-        this.startUDPConnection();
-      }
-      System.out.println("Backup RMIServer Starting");
+        this.setMainServer(false);
+        System.out.println(this.mainServer);
+        if (this.heartbeat == null){
+          this.startUDPConnection();
+        }
+        System.out.println("Backup RMIServer Starting");
     } catch(RemoteException re){
       System.out.println("RemoteException: " + re);
       return; 
@@ -454,13 +454,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> dateInicio;
     ArrayList<String> dateFim;
 
-    String sql1 = "SELECT ID FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
+    String sql1 = "SELECT ID FROM Eleicao WHERE active = true OR inicio >= NOW();";
     ID = database.submitQuery(sql1);
-    sql1 = "SELECT titulo FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
+    sql1 = "SELECT titulo FROM Eleicao WHERE active = true OR inicio >= NOW();";
     titulos = database.submitQuery(sql1);
-    sql1 = "SELECT inicio FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
+    sql1 = "SELECT inicio FROM Eleicao WHERE active = true OR inicio >= NOW();";
     dateInicio = database.submitQuery(sql1);
-    sql1 = "SELECT fim FROM Eleicao WHERE active = true OR inicio >= CURDATE();";
+    sql1 = "SELECT fim FROM Eleicao WHERE active = true OR inicio >= NOW();";
     dateFim = database.submitQuery(sql1);
 
     container.add(ID);
@@ -485,13 +485,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> dateInicio;
     ArrayList<String> dateFim;
 
-    String sql1 = "SELECT ID FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    String sql1 = "SELECT ID FROM Eleicao WHERE active = true OR inicio < NOW();";
     ID = database.submitQuery(sql1);
-    sql1 = "SELECT titulo FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    sql1 = "SELECT titulo FROM Eleicao WHERE active = true OR inicio < NOW();";
     titulos = database.submitQuery(sql1);
-    sql1 = "SELECT inicio FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    sql1 = "SELECT inicio FROM Eleicao WHERE active = true OR inicio < NOW();";
     dateInicio = database.submitQuery(sql1);
-    sql1 = "SELECT fim FROM Eleicao WHERE active = True OR inicio < CURDATE();";
+    sql1 = "SELECT fim FROM Eleicao WHERE active = true OR inicio < NOW();";
     dateFim = database.submitQuery(sql1);
 
     container.add(ID);
@@ -547,13 +547,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> dateInicio;
     ArrayList<String> dateFim;
 
-    String sql1 = "SELECT ID FROM Eleicao WHERE inicio < CURDATE();";
+    String sql1 = "SELECT ID FROM Eleicao WHERE inicio < NOW();";
     ID = database.submitQuery(sql1);
-    sql1 = "SELECT titulo FROM Eleicao WHERE inicio < CURDATE();";
+    sql1 = "SELECT titulo FROM Eleicao WHERE inicio < NOW();";
     titulos = database.submitQuery(sql1);
-    sql1 = "SELECT inicio FROM Eleicao WHERE inicio < CURDATE();";
+    sql1 = "SELECT inicio FROM Eleicao WHERE inicio < NOW();";
     dateInicio = database.submitQuery(sql1);
-    sql1 = "SELECT fim FROM Eleicao WHERE inicio < CURDATE();";
+    sql1 = "SELECT fim FROM Eleicao WHERE inicio < NOW();";
     dateFim = database.submitQuery(sql1);
 
     container.add(ID);
@@ -937,17 +937,17 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     boolean toClient = true;
     ArrayList<String> aux;
-    String sql = "SELECT * FROM MesaVoto WHERE ID='" + id + "' AND active='False';";
+    String sql = "SELECT * FROM Eleicao WHERE ID='" + id + "' AND active='False';";
     aux = database.submitQuery(sql);
     if (aux.isEmpty()){
       toClient = false;
     }
     else{
       if (flag == 1){
-        sql = "UPDATE MesaVoto WHERE ID='" + id + "SET inicio='" + newdate + "';";
+        sql = "UPDATE Eleicao SET inicio='" + newdate + "' WHERE ID='" + id + "';";
       }
       else if (flag == 2){
-        sql = "UPDATE MesaVoto WHERE ID='" + id + "SET fim='" + newdate + "';";
+        sql = "UPDATE Eleicao SET fim ='" + newdate + "' WHERE ID='" + id + "';";
       }
       database.submitUpdate(sql);
     } 
@@ -1210,6 +1210,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
               } catch (IOException ioe){
                 System.out.println("Networking Problems");
               } catch (InterruptedException ie){
+                  RMIServer.this.heartbeat = null;
 
                 try{ Naming.unbind(RMIServer.rmiName); }
                 catch(RemoteException re){}
@@ -1273,10 +1274,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
             System.out.println("RMIServer failed \nAssuming Main Server Status");
 
             try{
+              aSocket.close();
               RMIServer.this.heartbeat = null;
               RMIServer.this.mainServer = true;
               RMIServer.this.startRMIServer();
-              aSocket.close();
               Thread.currentThread().join();
             } catch(InterruptedException ie){
               System.out.println("Thread Interrupted");
