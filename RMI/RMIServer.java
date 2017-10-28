@@ -574,8 +574,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> listaNome;
     ArrayList<String> listaVotos;
 
-    String sqlNome = "SELECT nome FROM Lista WHERE eleicao_id='" + idElec +"' ORDER BY votos DESC;";
-    String sqlVotos = "SELECT votos FROM Lista WHERE eleicao_id'" + idElec +"' ORDER BY votos DESC;";
+    String sqlNome = "SELECT nome FROM Lista WHERE eleicao_id='" + idElec +"' AND nome !='Blank' AND nome !='Null' ORDER BY votos DESC;";
+    String sqlVotos = "SELECT votos FROM Lista WHERE eleicao_id'" + idElec +"' AND nome !='Blank' AND nome !='Null' ORDER BY votos DESC;";
 
     listaNome = database.submitQuery(sqlNome);
     listaVotos = database.submitQuery(sqlVotos);
