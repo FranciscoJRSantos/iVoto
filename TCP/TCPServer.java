@@ -21,6 +21,7 @@ public class TCPServer {
     static final List<Connection> connectionList = Collections.synchronizedList(new ArrayList<Connection>());
 
     public static void main(String args[]) {
+        //TODO: Callbacks for admin console?
         int connectionCount = 0;
         int choice;
         TCPConfigLoader c = new TCPConfigLoader();
@@ -29,77 +30,96 @@ public class TCPServer {
 
         connectToRMI();
 
-        //TODO: Protect against no elections
-        ArrayList<ArrayList<String>> electionData = requestElectionsList();
-        ArrayList<String> electionIDList = electionData.get(0);
-        ArrayList<String> electionNameList = electionData.get(1);
-        while (true) {
-            for (int i = 0; i < electionIDList.size(); i++) {
-                System.out.printf("\t%s - %s\n", electionIDList.get(i), electionNameList.get(i));
-            }
-            System.out.println("Pick the election by ID: ");
-            choice = readInt();
-            if (electionIDList.contains(Integer.toString(choice))) {
-                electionID = choice;
-                electionName = electionNameList.get(electionIDList.indexOf(Integer.toString(choice)));
-                System.out.printf("Election %d '%s' was successfully picked\n", electionID, electionName);
-                break;
-            } else {
-                System.out.println("There's no such ID!");
+        while(true) {
+            ArrayList<ArrayList<String>> electionData = requestElectionsList();
+            ArrayList<String> electionIDList = electionData.get(0);
+            ArrayList<String> electionNameList = electionData.get(1);
+            if (electionIDList.size() == 0){
+                System.out.println("No elections available now or scheduled to happen");
                 enterToContinue();
+                continue;
             }
-        }
-
-        //TODO: Protect against no tables
-        ArrayList<String> tableIDList = requestTableList();
-        while (true) {
-            for (String id : tableIDList) {
-                System.out.println("\tTable #" + id);
-            }
-            System.out.println("Pick the table's number: ");
-            choice = readInt();
-            if (tableIDList.contains(Integer.toString(choice))) {
-                tableID = choice;
-                System.out.printf("Table #%d was successfully picked\n", tableID);
-                break;
-            } else {
-                System.out.println("There's no such table!");
-                enterToContinue();
-            }
-        }
-
-        //TODO: Protect against no staff
-        ArrayList<ArrayList<String>> staffData = requestTableStaff();
-        ArrayList<String> staffCCList = staffData.get(0);
-        ArrayList<String> staffNameList = staffData.get(1);
-        int staffCC;
-        String staffName;
-        while (true) {
-            for (int i = 0; i < staffCCList.size(); i++) {
-                System.out.printf("\tCC:%s\tNome:%s\n", staffCCList.get(i), staffNameList.get(i));
-            }
-            System.out.println("Pick staff to login by CC:");
-            choice = readInt();
-            if (staffCCList.contains(Integer.toString(choice))) {
-                staffCC = choice;
-                staffName = staffNameList.get(staffCCList.indexOf(Integer.toString(choice)));
-                System.out.printf("Picked staff member '%s' (CC: %d)\n", staffName, staffCC);
-                System.out.println("Insert password");
-                Scanner sc = new Scanner(System.in);
-                if(checkLoginInfo(staffCC, staffName, sc.nextLine())){
-                    System.out.println("Login successful");
-                    break;
+            while (true) {
+                for (int i = 0; i < electionIDList.size(); i++) {
+                    System.out.printf("\t%s - %s\n", electionIDList.get(i), electionNameList.get(i));
                 }
-                else{
-                    System.out.println("Wrong password!");
+                System.out.println("Pick the election by ID: ");
+                choice = readInt();
+                if (electionIDList.contains(Integer.toString(choice))) {
+                    electionID = choice;
+                    electionName = electionNameList.get(electionIDList.indexOf(Integer.toString(choice)));
+                    System.out.printf("Election %d '%s' was successfully picked\n", electionID, electionName);
+                    break;
+                } else {
+                    System.out.println("There's no such ID!");
                     enterToContinue();
                 }
-            } else {
-                System.out.println("No staff has such CC!");
-                enterToContinue();
             }
+            break;
         }
 
+        while (true) {
+            ArrayList<String> tableIDList = requestTableList();
+            if (tableIDList.size()==0){
+                System.out.println("No voting tables available for this election");
+                enterToContinue();
+                continue;
+            }
+            while (true) {
+                for (String id : tableIDList) {
+                    System.out.println("\tVoting table #" + id);
+                }
+                System.out.println("Pick the voting table's number: ");
+                choice = readInt();
+                if (tableIDList.contains(Integer.toString(choice))) {
+                    tableID = choice;
+                    System.out.printf("Voting table #%d was successfully picked\n", tableID);
+                    break;
+                } else {
+                    System.out.println("There's no such voting table!");
+                    enterToContinue();
+                }
+            }
+            break;
+        }
+
+        while (true) {
+            ArrayList<ArrayList<String>> staffData = requestTableStaff();
+            ArrayList<String> staffCCList = staffData.get(0);
+            ArrayList<String> staffNameList = staffData.get(1);
+            if (staffCCList.size()==0){
+                System.out.println("No staff inserted for this voting table");
+                enterToContinue();
+                continue;
+            }
+            int staffCC;
+            String staffName;
+            while (true) {
+                for (int i = 0; i < staffCCList.size(); i++) {
+                    System.out.printf("\tCC:%s\tNome:%s\n", staffCCList.get(i), staffNameList.get(i));
+                }
+                System.out.println("Pick staff to login by CC:");
+                choice = readInt();
+                if (staffCCList.contains(Integer.toString(choice))) {
+                    staffCC = choice;
+                    staffName = staffNameList.get(staffCCList.indexOf(Integer.toString(choice)));
+                    System.out.printf("Picked staff member '%s' (CC: %d)\n", staffName, staffCC);
+                    System.out.println("Insert password");
+                    Scanner sc = new Scanner(System.in);
+                    if (checkLoginInfo(staffCC, staffName, sc.nextLine())) {
+                        System.out.println("Login successful");
+                        break;
+                    } else {
+                        System.out.println("Wrong password!");
+                        enterToContinue();
+                    }
+                } else {
+                    System.out.println("No staff has such CC!");
+                    enterToContinue();
+                }
+            }
+            break;
+        }
 
         new AdminCommands();
 
