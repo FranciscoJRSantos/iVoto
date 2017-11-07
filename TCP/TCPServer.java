@@ -32,7 +32,6 @@ public class TCPServer {
         while(true) {
             ArrayList<ArrayList<String>> electionData = requestElectionsList();
             if(electionData==null) continue;
-            System.out.println(electionData);
             ArrayList<String> electionIDList = electionData.get(0);
             ArrayList<String> electionNameList = electionData.get(1);
             if (electionIDList.size() == 0){

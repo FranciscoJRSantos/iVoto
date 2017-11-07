@@ -20,7 +20,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   static DatabaseConnection database = null;
   static String rmiName;
   static int rmiPort; // 1099
-  static int udpPort; // 6666
+  static int udpPort; 
   static String dbIP;
   static int dbPort;
   UDPConnection heartbeat = null;
@@ -47,8 +47,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       } catch (InterruptedException ie){
         ie.printStackTrace();
       }
-      String sql1 = "UPDATE Eleicao SET active=true WHERE inicio > NOW() AND fim < NOW();";
-      String sql2 = "UPDATE Eleicao SET active=false WHERE inicio < NOW() OR fim > NOW();";
+      String sql1 = "UPDATE Eleicao SET active=1 WHERE inicio < NOW() AND fim > NOW();";
+      String sql2 = "UPDATE Eleicao SET active=0 WHERE inicio > NOW() OR fim < NOW();";
 
       database.submitUpdate(sql1);
       database.submitUpdate(sql2);
@@ -342,6 +342,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> aux1;
     ArrayList<String> aux2;
     ArrayList<String> aux3;
+    ArrayList<String> aux4;
+    String sl8 = "SELECT * FROM Eleicao WHERE ID='" + eleicao_id + "' AND active=1";
+    aux4 = database.submitQuery(sl8);
+    if (aux4.isEmpty()){
+      return toClient;
+    }
     String sql6 = "SELECT ID FROM Lista WHERE nome='" + lista + "' AND eleicao_id='" + eleicao_id +"';";
     aux3 = database.submitQuery(sql6);
     if (!aux3.isEmpty()){
@@ -680,7 +686,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     String sql;
 
     if (flag == 1){
-      sql = "INSERT INTO Lista (nome,tipo,eleicao_id) VALUES ('" + List + "','" + listType + "','"+ idElec + "');"; 
+      sql = "INSERT INTO Lista (nome,tipo,votos,eleicao_id) VALUES ('" + List + "','" + listType + "',0,'"+ idElec + "');"; 
       database.submitUpdate(sql);
     }
     else if(flag ==2){
@@ -844,7 +850,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   public boolean createList(String nome, int tipo, int eleicao_id) throws RemoteException{
 
-    String sql = "INSERT INTO Lista (nome,tipo,votos,eleicao_id) VALUES('"+ nome +"','"+ tipo + "','" + "',0,'" + eleicao_id + "');";
+    String sql = "INSERT INTO Lista (nome,tipo,votos,eleicao_id) VALUES('"+ nome +"','"+ tipo + "',0,'" + eleicao_id + "');";
     database.submitUpdate(sql);
 
     return true;
@@ -864,7 +870,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> listaVotos;
 
     String sqlNome = "SELECT nome FROM Lista WHERE eleicao_id='" + idElec +"' ORDER BY votos DESC;";
-    String sqlVotos = "SELECT votos FROM Lista WHERE eleicao_id'" + idElec +"' ORDER BY votos DESC;";
+    String sqlVotos = "SELECT votos FROM Lista WHERE eleicao_id='" + idElec +"' ORDER BY votos DESC;";
 
     listaNome = database.submitQuery(sqlNome);
     listaVotos = database.submitQuery(sqlVotos);
