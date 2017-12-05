@@ -12,8 +12,10 @@ public interface ServerInterface extends Remote{
     public ArrayList<String> showEleicao(int id) throws RemoteException;
     public ArrayList<String> showLista(String nome, int eleicao_id) throws RemoteException;
     public ArrayList<String> showUtilizadoresMesaVoto(int numero, String un_orn_name, int eleicao_id) throws RemoteException;
-    public ArrayList<String> showEleicoesDecorrer() throws RemoteException;
+    public ArrayList<ArrayList<String>> showEleicoesDecorrer() throws RemoteException;
     public ArrayList<String> showPersonVotingInfo(String numero_cc, int eleicao_id) throws RemoteException;
+    public ArrayList<String> showMesasVotoEleicao(int eleicao_id) throws RemoteException;
+    public ArrayList<ArrayList<String>> showUtilizadoresMesaVoto(int numero, String un_orn_name, int eleicao_id) throws RemoteException;
     public boolean deleteUtilizador(String numero_cc) throws RemoteException;
     public boolean deleteUO(String nome) throws RemoteException;
     public boolean deleteLista(String nome, int eleicao_id) throws RemoteException;

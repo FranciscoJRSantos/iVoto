@@ -173,7 +173,7 @@ public class TCPServer {
     private static ArrayList<ArrayList<String>> requestElectionsList() {
         while (true) {
             try {
-                return r.viewCurrentElections();
+                return r.showEleicoesDecorrer();
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI viewCurrentElections. Retrying connection");
                 if(!connectToRMI()) return null;
