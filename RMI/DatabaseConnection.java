@@ -2,7 +2,6 @@
     https://www.javatpoint.com/example-to-connect-to-the-mysql-database
 
 */
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -33,7 +32,7 @@ public class DatabaseConnection{
     try {
 
       connection = DriverManager.getConnection(
-          "jdbc:mysql://127.0.0.1:3306/ivotobd?useSSL=false", "bd",
+          "jdbc:mysql://127.0.0.1:3306/ivotobd2?useSSL=false", "bd",
           "bd");
 
     } catch (SQLException e) {

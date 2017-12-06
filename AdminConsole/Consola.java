@@ -1,8 +1,3 @@
-//TODO: RELATORIO
-//TODO: comentar codigo
-//TODO: opçoes realtime estaticas
-
-
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -890,7 +885,7 @@ public class Consola {
         System.out.printf("Validade do Cartão de Cidadão: ");
         ccv = sc.nextLine();
 
-        if (r.addPerson(nome, address, phone, ccn, ccv, iddep, idfac, pass, option)) {
+        if (r.createUser(ccn, nome, address, pass,  phone, ccv, iddep, idfac, option)) {
             System.out.println("Sucesso!");
         } else {
             System.out.println("Erro!");
