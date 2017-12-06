@@ -186,7 +186,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     public ArrayList<ArrayList<String>> showEleicoesDecorrer() throws RemoteException{
 
-        ArrayList<ArrayList<String>> eleicoes;
+        ArrayList<ArrayList<String>> eleicoes = new ArrayList<ArrayList<String>>();
         ArrayList<String> id;
         ArrayList<String> descricao;
         String sql_id = "SELECT id FROM eleicao WHERE inicio > NOW() AND fim > NOW();";
@@ -211,7 +211,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     public ArrayList<ArrayList<String>> showUtilizadoresMesaVoto(int numero, String un_orn_name, int eleicao_id) throws RemoteException{
 
-        ArrayList<ArrayList<String>> utilizadores;
+        ArrayList<ArrayList<String>> utilizadores = new ArrayList<ArrayList<String>>();
         ArrayList<String> id;
         ArrayList<String> nome;
         String sql_id = "SELECT u.id FROM utilizador u, mesa_voto_utilizador mvu WHERE u.numero_cc = mvu.utilizador_numero_CC AND mvu.mesa_voto_unidade_organica_nome LIKE " + un_orn_name + "' AND mvu.eleicao_id ='" + eleicao_id + "';";
@@ -245,6 +245,43 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     }
 
     // Update
+    public String vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException{
+
+      // FINNISH THISSSSSSSSSSSSSSSSSSSSSSSSSSSSSS 
+      String toClient = null;
+      ArrayList<String> aux1;
+      ArrayList<String> aux2;
+      ArrayList<String> aux3;
+      String sql6 = "SELECT nome FROM lista WHERE nome='" + lista + "' AND eleicao_id='" + eleicao_id +"';";
+      aux3 = database.submitQuery(sql6);
+      if (lista.equals("")){
+        aux3.add("Blank"); 
+      }
+      else if (!aux3.isEmpty()){
+        aux3.add("Null");
+      }
+
+      String sql1 = "UPDATE lista SET votos = votos +1 WHERE nome LIKE " + lista + " AND eleicao_id='" + eleicao_id + "';";
+      // String sql2 = "SELECT id FROM WHERE numeroCC='" + cc + "';";
+
+      String sql2 = "SELECT * FROM eleicao_utilizador WHERE utilizador_numero_cc  ='" + cc + "' AND eleicao_id='" +  eleicao_id + "';";
+      aux2 = database.submitQuery(sql2);
+      System.out.println(aux2);
+      if (aux2.isEmpty()){
+        String sql3 = "SELECT unidade_organica_nome FROM mesa_voto WHERE eleicao_id = '" + eleicao_id + "' AND numero='" + mesavoto_id + "';";
+        aux1 = database.submitQuery(sql3);
+        String sql5 = "INSERT INTO eleicao_utilizador (unidade_organica_nome,eleicao_id,utilizador_numero_cc) VALUES('" + aux1.get(0) + "','" + eleicao_id + "',true,'" + mesavoto_id + "',NOW());";
+        String sql7 = "UPDATE mesa_voto SET numeroVotos=numeroVotos+1 WHERE ID='" +mesavoto_id+ "';";
+        database.submitUpdate(sql7);
+        database.submitUpdate(sql5);
+        database.submitUpdate(sql1);
+        toClient = lista;
+      }
+      else{
+        toClient = null;
+      }
+      return toClient;
+    }
 
     // Delete
 
@@ -316,6 +353,53 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
         return answer;
     }
 
+    // Security
+
+    public boolean checkLogin(String numero_cc, String nome, String password_hashed){
+       
+       boolean answer = true;
+       String sql = "SELECT * FROM utilizador WHERE numero_cc LIKE " + numero_cc + " AND nome LIKE " + nome + " AND password_hashed LIKE " + password_hashed + ";";
+       ArrayList check = database.submitQuery(sql);
+
+       if (check.isEmpty()){
+          answer = false;
+       }
+       else answer = true;
+
+
+       return answer;
+    }
+
+    public String checkCC(String numero_cc, int eleicao_id){
+
+      String answer = null;
+      String sql_user_data = "SELECT nome,tipo FROM utilizador WHERE numero_cc LIKE " + numero_cc + ";";
+      ArrayList<String> user_data = database.submitQuery(sql_user_data);
+
+      if (!user_data.isEmpty()){
+        String sql_eleicao_data = "SELECT tipo FROM eleicao WHERE eleicao_id='" + eleicao_id + "';";
+        ArrayList<String> eleicao_data = database.submitQuery(sql_eleicao_data);
+
+        if(!eleicao_data.isEmpty()){
+          if (eleicao_data.get(0).equals("1")){
+            answer = user_data.get(0);
+          }
+          else{ 
+            String sql_user_unorg = "SELECT unidade_organica_nome FROM unidade_organica_utilizador WHERE numero_cc LIKE " + numero_cc + ";";
+            ArrayList<String> user_unorg = database.submitQuery(sql_user_unorg);
+
+            if (!user_unorg.isEmpty()){
+
+            } else answer = null;
+
+            
+          }
+        } else answer = null;
+
+      } else answer = null;
+      
+      return answer;
+    }
 
 
     class UDPConnection extends Thread {
