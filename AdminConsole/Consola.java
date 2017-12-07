@@ -396,6 +396,7 @@ public class Consola {
     private void manageTables() throws RemoteException {
         int operation;
         boolean verify = false;
+        String un_org_nome = getUniOrgNome();
 
         do {
             System.out.println("Deseja adicionar ou remover uma mesa? ");
@@ -418,7 +419,7 @@ public class Consola {
         switch (operation) {
             case 1:
                 System.out.println("Associe uma unidade organica à mesa!");
-                String un_org_nome = getUniOrgNome();
+                un_org_nome = getUniOrgNome();
                 if (un_org_nome == null) {
                     System.out.println("Erro!");
                     return;
@@ -429,8 +430,9 @@ public class Consola {
                 break;
             case 2:
                 int table = pickTableFromElection(elecID);
-                if (table != -1) {
-                    verify = r.removeTableFromElection(elecID, table);
+                un_org_nome = getUniOrgNome();
+                if (table != -1 && un_org_nome != null) {
+                    verify = r.deleteMesaVoto(table, un_org_nome, elecID);
                 }
                 break;
         }
