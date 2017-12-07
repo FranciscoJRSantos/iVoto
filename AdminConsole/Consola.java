@@ -449,6 +449,7 @@ public class Consola {
         int operation;
         boolean verify = false;
         int actual, tableID, ccn;
+        String un_org_nome;
 
         do {
             System.out.println("Que operação quer realizar? ");
@@ -466,6 +467,7 @@ public class Consola {
         if (operation == 1) {
             System.out.println("Insira o numero de cartão de cidadão da nova pessoa!");
             ccn = getPhoneOrCCN(2);
+            un_org_nome = getUniOrgNome();
             verify = r.addToTable(tableID, ccn);
 
 
@@ -475,8 +477,9 @@ public class Consola {
                 return;
             }
             System.out.println("Insira o numero de cartão de cidadão da nova pessoa!");
+            un_org_nome = getUniOrgNome();
             ccn = getPhoneOrCCN(2);
-            verify = r.manageTable(elecID, actual, ccn);
+            verify = r.updateMesaVotoUtilizadores(ccn, un_org_nome , elecID);
         }
 
         if (verify) {

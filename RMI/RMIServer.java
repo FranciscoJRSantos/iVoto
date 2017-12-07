@@ -430,6 +430,16 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
       return true;
     }
 
+    public boolean updateMesaVotoUtilizadores(int numero_cc, String unidade_organica_nome , int id_eleicao){
+
+      String sql = "INSERT INTO mesa_voto_utilizador (mesa_voto_unidade_organica_nome, mesa_voto_eleicao_id, utilizador_numero_cc) VALUES (" +unidade_organica_nome + "," +  id_eleicao + "," + numero_cc + ") ON DUPLICATE KEY UPDATE SET mesa_voto_unidade_organica_nome = '" + unidade_organica_nome + "','" + id_eleicao + "','" + numero_cc + "' WHERE numero_cc ='" + numero_cc +"';";
+
+      database.submitUpdate(sql);
+
+      return true;
+
+    }
+
     public String vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException{
 
       String toClient = null;
