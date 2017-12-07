@@ -774,6 +774,17 @@ public class Consola {
             }
         } while (operation <= 0 || operation > 3);
 
+        do {
+            System.out.println("Sobre o que?");
+            System.out.println("1-Nome de uma unidade organica");
+            System.out.println("2-Faculdade à qual pertence um departamento");
+            System.out.printf("Opção: ");
+            target = readInt();
+            if (target <= 0 || target > 2) {
+                System.out.println("Insira um valor válido, por favor.\n");
+            }
+        } while (target <= 0 || target > 2);
+
         switch (operation) {
             case 1:
               un_org_nome = getUniOrgNome();

@@ -426,7 +426,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
         sql = "UPDATE unidade_organica SET pertence='" + novo_nome + "' WHERE nome='" + nome + "';";
       }
 
-      database.submitUpdate(sql1);
+      database.submitUpdate(sql);
       return true;
     }
 
