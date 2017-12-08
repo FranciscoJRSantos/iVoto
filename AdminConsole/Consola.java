@@ -571,7 +571,7 @@ public class Consola {
                     System.out.println("Insira um valor válido, por favor.\n");
                 }
             } while (listType <= 0 || listType > 3);
-            int numero_cc = getPhoneOrCCN(1);
+            int numero_cc = getPhoneOrCCN(2);
             if(r.createLista(list, listType, electionId, numero_cc)){
               System.out.println("Sucesso");
             }
@@ -770,7 +770,7 @@ public class Consola {
         Scanner sc = new Scanner(System.in);
         int operation, target;
         String un_org_nome = null;
-        String name;
+        String name, pertence;
         boolean verify = false;
 
         do {
@@ -785,26 +785,12 @@ public class Consola {
             }
         } while (operation <= 0 || operation > 3);
 
-        do {
-            System.out.println("Sobre o que?");
-            System.out.println("1-Nome de uma unidade organica");
-            System.out.println("2-Faculdade à qual pertence um departamento");
-            System.out.printf("Opção: ");
-            target = readInt();
-            if (target <= 0 || target > 2) {
-                System.out.println("Insira um valor válido, por favor.\n");
-            }
-        } while (target <= 0 || target > 2);
 
         switch (operation) {
             case 1:
-              un_org_nome = getUniOrgNome();
-              if (un_org_nome == null) {
-                System.out.println("Erro!");
-                return;
-              }
               System.out.printf("Insira o nome da nova unidade organica: ");
               name = sc.nextLine();
+              System.out.printf("Insira o nome da faculdade à qual o departamento adicionado pertence: (Deixar vazio se for uma faculdade) ");
               verify = r.createUnidadeOrganica(name, un_org_nome);
               break;
             case 2:
@@ -821,6 +807,16 @@ public class Consola {
                 System.out.println("Erro!");
                 return;
               }
+              do {
+                System.out.println("Sobre o que?");
+                System.out.println("1-Nome de uma unidade organica");
+                System.out.println("2-Faculdade à qual pertence um departamento");
+                System.out.printf("Opção: ");
+                target = readInt();
+                if (target <= 0 || target > 2) {
+                  System.out.println("Insira um valor válido, por favor.\n");
+                }
+              } while (target <= 0 || target > 2);
               System.out.print("Insira o novo nome da unidade organica: ");
               name = sc.nextLine();
               verify = r.updateUnidadeOrganica(un_org_nome, name, target);
@@ -853,15 +849,10 @@ public class Consola {
                 System.out.println("Insira um valor válido, por favor.\n");
             }
         } while (option < 0 || option > 3);
-        System.out.printf("Introduza o contacto telefónico!");
-        phone = getPhoneOrCCN(1);
         System.out.printf("Introduza o número de cartão de cidadão!");
         ccn = getPhoneOrCCN(2);
-        un_org_nome = getUniOrgNome();
-        if (un_org_nome == null) {
-            System.out.println("Erro!");
-            return;
-        }
+        System.out.printf("Introduza o contacto telefónico!");
+        phone = getPhoneOrCCN(1);
         un_org_nome = getUniOrgNome();
         if (un_org_nome == null) {
             System.out.println("Erro!");

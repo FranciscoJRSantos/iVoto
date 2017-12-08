@@ -24,13 +24,13 @@ public interface ServerInterface extends Remote{
   public ArrayList<String> showListsFromElection(int eleicao_id) throws RemoteException;
   public ArrayList<ArrayList<String>> showResultadosFromEleicao(int eleicao_id) throws RemoteException;
   // Update
-  public boolean updateUtilizador(int cc, String new_info, int flag);
+  public boolean updateUtilizador(int cc, String new_info, int flag) throws RemoteException;
   public String vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException;
   public String anticipatedVote(int cc, String lista, int eleicao_id, String pass) throws RemoteException;
   public boolean updateEleicoesData(int id, String newdate, int flag) throws RemoteException;
   public boolean updateEleicoesDescricao(int id, String newdate) throws RemoteException;
   public boolean updateUnidadeOrganica(String nome, String novo_nome, int flag) throws RemoteException;
-  public boolean updateMesaVotoUtilizadores(int numero_cc, String unidade_organica_nome , int id_eleicao);
+  public boolean updateMesaVotoUtilizadores(int numero_cc, String unidade_organica_nome , int id_eleicao) throws RemoteException;
   // Delete
   public boolean deleteUtilizador(int numero_cc) throws RemoteException;
   public boolean deleteUO(String nome) throws RemoteException;
