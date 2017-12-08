@@ -468,7 +468,7 @@ public class Consola {
             System.out.println("Insira o numero de cartão de cidadão da nova pessoa!");
             ccn = getPhoneOrCCN(2);
             un_org_nome = getUniOrgNome();
-            verify = r.addToTable(tableID, ccn);
+            verify = r.updateMesaVotoUtilizadores(ccn, un_org_nome , elecID);
 
 
         } else {
@@ -571,7 +571,13 @@ public class Consola {
                     System.out.println("Insira um valor válido, por favor.\n");
                 }
             } while (listType <= 0 || listType > 3);
-
+            int numero_cc = getPhoneOrCCN(1);
+            if(r.createLista(list, listType, electionId, numero_cc)){
+              System.out.println("Sucesso");
+            }
+            else {
+              System.out.println("Erro");
+            }
         } else {
             list = pickListFromElection(0,electionId,1);
             if (list.equals("")) {
@@ -580,7 +586,7 @@ public class Consola {
             }
         }
 
-        if (r.manageList(electionId, listType, list, operation)) {
+        if (r.deleteLista(list,electionId)) {
             System.out.println("Sucesso!");
         } else {
             System.out.println("Erro!");
