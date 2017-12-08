@@ -22,11 +22,10 @@ public interface ServerInterface extends Remote{
   public ArrayList<ArrayList<String>> showUtilizadoresMesaVoto(int numero, String un_orn_name, int eleicao_id) throws RemoteException;
   public ArrayList<String> pickListsFromElection(int numero_cc, int eleicao_id) throws RemoteException;
   public ArrayList<String> showListsFromElection(int eleicao_id) throws RemoteException;
-  public ArrayList<ArrayList<String>> showResultadosFromEleicao(int eleicao_id) throws RemoteException;
   // Update
   public boolean updateUtilizador(int cc, String new_info, int flag);
   public String vote(int cc, String lista, int eleicao_id, int mesavoto_id) throws RemoteException;
-  public String anticipatedVote(int cc, String lista, int eleicao_id, String pass) throws RemoteException;
+  public String anticipatedVote(int cc, String lista, int eleicao_id, int mesavoto_id, String pass) throws RemoteException;
   public boolean updateEleicoesData(int id, String newdate, int flag) throws RemoteException;
   public boolean updateEleicoesDescricao(int id, String newdate) throws RemoteException;
   public boolean updateUnidadeOrganica(String nome, String novo_nome, int flag) throws RemoteException;

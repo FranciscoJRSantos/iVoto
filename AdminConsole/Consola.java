@@ -299,7 +299,7 @@ public class Consola {
             return;
         }
 
-        if (r.anticipatedVote(elecId, ccn, voto, pass)) {
+        if (r.anticipatedVote(ccn,voto,elecId, pass) != null) {
             System.out.println("Sucesso!");
         } else {
             System.out.println("Erro!");
@@ -313,7 +313,7 @@ public class Consola {
             System.out.println("Erro!");
             return;
         }
-        ArrayList<ArrayList<String>> results = r.checkResults(elecId);
+        ArrayList<ArrayList<String>> results = r.showResultadosFromEleicao(elecId);
         if (results.get(1).size() == 0) {
             System.out.println("Não existem resultados!");
             return;
@@ -625,7 +625,7 @@ public class Consola {
     //dada a eleiçao mostra as listas candidatas. o "type" decide se se mostras as listas blank e null ou nao
     private String pickListFromElection(int cc, int elecID, int type) throws RemoteException {
 
-        ArrayList<String> listsList;
+        ArrayList<String> listsList = new ArrayList<String>();
         if (type == 1) {
             listsList = r.showListsFromElection(elecID);
         }
