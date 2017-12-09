@@ -140,11 +140,11 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean createMesaVoto(String un_org_nome, int eleicao_id, int numero_cc) throws RemoteException{
 
     boolean answer = true;
-    ArrayList check;
+    ArrayList<String> check;
     String protection = "SELECT COUNT(*) FROM mesa_voto WHERE unidade_organica_nome LIKE '" + un_org_nome + "' AND eleicao_id='" + eleicao_id + "';";
     check = database.submitQuery(protection);
 
-    if ((Integer) check.get(0) > 1){
+    if ((Integer.parseInt(check.get(0))) > 1){
       answer = false;
     }
     else{
@@ -219,9 +219,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> id;
     ArrayList<String> descricao;
     ArrayList<String> local;
-    String sql_id = "SELECT id FROM eleicao WHERE inicio > NOW() AND fim > NOW();";
-    String sql_descricao = "SELECT descricao FROM eleicao WHERE inicio> NOW() AND fim > NOW();";
-    String sql_local = "SELECT unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao uoe WHERE e.inicio> NOW() AND e.fim> NOW() AND e.id = uoe.eleicao_id;";
+    String sql_id = "SELECT id FROM eleicao WHERE NOW() BETWEEN inicio AND fim;";
+    String sql_descricao = "SELECT descricao FROM eleicao WHERE NOW() BETWEEN inicio AND fim;";
+    String sql_local = "SELECT unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao uoe WHERE e.id = uoe.eleicao_id AND NOW() BETWEEN e.inicio AND e.fim;";
     id = database.submitQuery(sql_id);
     descricao = database.submitQuery(sql_descricao);
     local = database.submitQuery(sql_local);
@@ -305,8 +305,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<ArrayList<String>> utilizadores = new ArrayList<ArrayList<String>>();
     ArrayList<String> id;
     ArrayList<String> nome;
-    String sql_id = "SELECT u.id FROM utilizador AS u, mesa_voto_utilizador AS mvu WHERE u.numero_cc = mvu.utilizador_numero_CC AND mvu.mesa_voto_unidade_organica_nome LIKE " + un_orn_name + "' AND mvu.eleicao_id ='" + eleicao_id + "';";
-    String sql_nome = "SELECT u.nome FROM utilizador AS u, mesa_voto_utilizador AS mvu WHERE u.numero_cc = mvu.utilizador_numero_CC AND mvu.mesa_voto_unidade_organica_nome LIKE " + un_orn_name + "' AND mvu.eleicao_id ='" + eleicao_id + "';";
+    String sql_id = "SELECT u.numero_cc FROM utilizador AS u, mesa_voto_utilizador AS mvu WHERE u.numero_cc = mvu.utilizador_numero_CC AND mvu.unidade_organica_nome LIKE '" + un_orn_name + "' AND mvu.eleicao_id ='" + eleicao_id + "';";
+    String sql_nome = "SELECT u.nome FROM utilizador AS u, mesa_voto_utilizador AS mvu WHERE u.numero_cc = mvu.utilizador_numero_CC AND mvu.unidade_organica_nome LIKE '" + un_orn_name + "' AND mvu.eleicao_id ='" + eleicao_id + "';";
     id = database.submitQuery(sql_id);
     nome = database.submitQuery(sql_nome);
 
@@ -466,9 +466,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> aux1;
     ArrayList<String> aux2;
     ArrayList<String> aux3;
-    String sql6 = "SELECT nome FROM lista WHERE nome='" + lista + "' AND eleicao_id='" + eleicao_id +"';";
+    String sql6 = "SELECT nome FROM lista WHERE nome LIKE '" + lista + "' AND eleicao_id='" + eleicao_id +"';";
     aux3 = database.submitQuery(sql6);
-    if (lista.equals("")){
+    if (lista.equals("") || lista.trim().length() == 0){
       aux3.add("Blank"); 
     }
     else if (!aux3.isEmpty()){
@@ -523,7 +523,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     System.out.println(aux2);
     if (aux2.isEmpty()){
       String sql4 = "INSERT INTO eleicao_utilizador (unidade_organica_nome,eleicao_id,utilizador_numero_cc,mesa_voto_numero) VALUES(NULL,'" + eleicao_id + "','" + cc + "',NULL;";
-      String sql5 = "UPDATE lista SET votos = votos +1 WHERE nome LIKE " + lista + " AND eleicao_id='" + eleicao_id + "';";
+      String sql5 = "UPDATE lista SET votos = votos +1 WHERE nome LIKE '" + lista + "' AND eleicao_id='" + eleicao_id + "';";
       database.submitUpdate(sql4);
       database.submitUpdate(sql5);
       toClient = lista;
@@ -538,16 +538,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean deleteUtilizador(int numero_cc) throws RemoteException{
 
     boolean answer = true;
-    String protection = "SELECT * FROM utilizador WHERE numero_cc ='" + numero_cc + "';";
-    ArrayList safety = database.submitQuery(protection);
-
-    if (safety.isEmpty()){
-      answer = false;
-    }
-    else{
-      String sql = "DELETE FROM utilizador WHERE numero_cc='" + numero_cc +"';";
-      database.submitQuery(sql);
-    }
+    String sql = "DELETE FROM utilizador WHERE numero_cc='" + numero_cc +"';";
+    database.submitUpdate(sql);
 
     return answer;
   }
@@ -555,16 +547,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean deleteUO(String nome) throws RemoteException{
 
     boolean answer = true;
-    String protection = "SELECT * FROM unidade_organica WHERE unidade_organica LIKE " + nome + ";";
-    ArrayList safety = database.submitQuery(protection);
-
-    if (safety.isEmpty()){
-      answer = false;
-    }
-    else{
-      String sql = "DELETE FROM unidade_organica WHERE nome LIKE " + nome +";";
-      database.submitQuery(sql);
-    }
+    String sql = "DELETE FROM unidade_organica WHERE nome LIKE " + nome +";";
+    database.submitUpdate(sql);
 
     return answer;
   }
@@ -572,16 +556,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean deleteLista(String nome, int eleicao_id) throws RemoteException{
 
     boolean answer = true;
-    String protection = "SELECT * FROM lista WHERE nome LIKE " + nome + " AND eleicao_id=" + eleicao_id + ";";
-    ArrayList safety = database.submitQuery(protection);
-
-    if (safety.isEmpty()){
-      answer = false;
-    }
-    else{
-      String sql = "DELETE FROM lista WHERE nome='" + nome +"' AND eleicao id=" + eleicao_id + ";";
-      database.submitQuery(sql);
-    }
+    String sql = "DELETE FROM lista WHERE LIKE '" + nome +"' AND eleicao id=" + eleicao_id + ";";
+    database.submitUpdate(sql);
 
     return answer;
   }
@@ -589,16 +565,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean deleteMesaVoto(int numero,String un_org_nome, int eleicao_id) throws RemoteException{
 
     boolean answer = true;
-    String protection = "SELECT * FROM mesa WHERE un_org_nome LIKE " + un_org_nome + " AND eleicao_id=" + eleicao_id + " AND numero=" + numero + ";";
-    ArrayList safety = database.submitQuery(protection);
-
-    if (safety.isEmpty()){
-      answer = false;
-    }
-    else{
-      String sql = "DELETE FROM mesa WHERE un_org_nome LIKE " + un_org_nome + " AND eleicao_id=" + eleicao_id + " AND numero=" + numero + ";";
-      database.submitQuery(sql);
-    }
+    String sql = "DELETE FROM mesa_voto WHERE unidade_organica_nome LIKE '" + un_org_nome + "' AND eleicao_id=" + eleicao_id + " AND numero=" + numero + ";";
+    database.submitUpdate(sql);
 
     return answer;
   }
@@ -612,7 +580,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean checkLogin(int numero_cc, String nome, String password_hashed) throws RemoteException{
 
     boolean answer = true;
-    String sql = "SELECT * FROM utilizador WHERE numero_cc = '" + numero_cc + "' AND nome LIKE " + nome + " AND password_hashed LIKE " + password_hashed + ";";
+    String sql = "SELECT * FROM utilizador WHERE numero_cc = '" + numero_cc + "' AND nome LIKE '" + nome + "' AND password_hashed LIKE '" + password_hashed + "';";
     ArrayList check = database.submitQuery(sql);
 
     if (check.isEmpty()){
@@ -627,11 +595,11 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public String checkCC(int numero_cc, int eleicao_id) throws RemoteException{
 
     String answer = null;
-    String sql_user_data = "SELECT nome,tipo FROM utilizador WHERE numero_cc ='" + numero_cc + "';";
+    String sql_user_data = "SELECT nome,tipo FROM utilizador WHERE numero_cc LIKE '" + numero_cc + "';";
     ArrayList<String> user_data = database.submitQuery(sql_user_data);
 
     if (!user_data.isEmpty()){
-      String sql_eleicao_data = "SELECT e.tipo, uoe.unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao AS uoe WHERE e.eleicao_id='" + eleicao_id + "' AND uoe.eleicao_id ='" + eleicao_id + "';";
+      String sql_eleicao_data = "SELECT e.tipo, uoe.unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao AS uoe WHERE e.id='" + eleicao_id + "' AND uoe.eleicao_id ='" + eleicao_id + "';";
       ArrayList<String> eleicao_data = database.submitQuery(sql_eleicao_data);
 
       if(!eleicao_data.isEmpty()){
@@ -639,7 +607,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
           answer = user_data.get(0);
         }
         else{ 
-          String sql_user_unorg = "SELECT unidade_organica_nome FROM unidade_organica_utilizador WHERE numero_cc ='" + numero_cc + "';";
+          String sql_user_unorg = "SELECT unidade_organica_nome FROM unidade_organica_utilizador WHERE utilizador_numero_cc ='" + numero_cc + "';";
           ArrayList<String> user_unorg = database.submitQuery(sql_user_unorg);
 
           if (!user_unorg.isEmpty()){

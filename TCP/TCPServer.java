@@ -188,7 +188,7 @@ public class TCPServer {
     private static ArrayList<String> requestTableList() {
         while (true) {
             try {
-                return r.showMesasVotoEleicao(electionID);
+                return r.showMesasVotoEleicao(electionID).get(0);
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI showTables. Retrying connection");
                 if(!connectToRMI()) return null;
@@ -233,7 +233,7 @@ public class TCPServer {
     static ArrayList<String> requestCandidatesList(int cc) {
         while (true) {
             try {
-                return r.showListsFromElection(cc, electionID);
+                return r.pickListsFromElection(cc, electionID);
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI viewListsFromElection. Retrying connection");
                 if(!connectToRMI()) return null;

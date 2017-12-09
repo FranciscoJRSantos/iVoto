@@ -396,7 +396,7 @@ public class Consola {
     private void manageTables() throws RemoteException {
         int operation;
         boolean verify = false;
-        String un_org_nome = getUniOrgNome();
+        String un_org_nome;
 
         do {
             System.out.println("Deseja adicionar ou remover uma mesa? ");
@@ -584,13 +584,13 @@ public class Consola {
                 System.out.println("Erro");
                 return;
             }
+            if (r.deleteLista(list,electionId)) {
+              System.out.println("Sucesso!");
+            } else {
+              System.out.println("Erro!");
+            }
         }
 
-        if (r.deleteLista(list,electionId)) {
-            System.out.println("Sucesso!");
-        } else {
-            System.out.println("Erro!");
-        }
     }
 
     //seleciona uma mesa de eleiçao dada
@@ -600,20 +600,22 @@ public class Consola {
         boolean flag = true;
         int option = 0;
         String table;
-
+        
         if (tableList == null) {
             System.out.println("Não existe nenhuma mesa.");
             return -1;
         }
+        System.out.println(tableList.get(0));
+        System.out.println(tableList.get(1));
         while (flag) {
             flag = false;
             System.out.println("Qual mesa de voto?");
-            for (int i = 0; i < tableList.get(0).size(); i++) {
+            for (int i = 0; i < tableList.size(); i++) {
                 System.out.println(i + 1 + " -> " + tableList.get(0).get(i) + " - " + tableList.get(1).get(i));
             }
             System.out.printf("Opção: ");
             option = readInt();
-            if (option <= 0 || option > tableList.get(0).size()) {
+            if (option <= 0 || option > tableList.size()) {
                 System.out.println("Insira um valor válido, por favor.\n");
                 flag = true;
             }
