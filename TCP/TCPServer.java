@@ -35,7 +35,6 @@ public class TCPServer {
             if(electionData==null) continue;
             ArrayList<String> electionIDList = electionData.get(0);
             ArrayList<String> electionNameList = electionData.get(1);
-            ArrayList<String> electionLocalList = electionData.get(2);
             if (electionIDList.size() == 0){
                 System.out.println("No elections available now or scheduled to happen");
                 enterToContinue();
@@ -50,7 +49,6 @@ public class TCPServer {
                 if (electionIDList.contains(Integer.toString(choice))) {
                     electionID = choice;
                     electionName = electionNameList.get(electionIDList.indexOf(Integer.toString(choice)));
-                    electionLocal = electionLocalList.get(electionIDList.indexOf(Integer.toString(choice)));
                     System.out.printf("Election %d '%s' was successfully picked\n", electionID, electionName);
                     break;
                 } else {
@@ -199,7 +197,7 @@ public class TCPServer {
     private static ArrayList<ArrayList<String>> requestTableStaff(){
         while (true) {
             try {
-                return r.showUtilizadoresMesaVoto(tableID,electionLocal,electionID);
+                return r.showUtilizadoresMesaVoto(tableID, electionID);
             } catch (RemoteException e) {
                 System.out.println("[Warning] Failed to use RMI showTables. Retrying connection");
                 if(!connectToRMI()) return null;

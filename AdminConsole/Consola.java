@@ -494,8 +494,7 @@ public class Consola {
 
         Scanner sc = new Scanner(System.in);
         ArrayList<ArrayList<String>> usersList;
-        String un_org_nome = getUniOrgNome();
-        usersList = r.showUtilizadoresMesaVoto(mesaVotoId,un_org_nome, elecID);
+        usersList = r.showUtilizadoresMesaVoto(mesaVotoId, elecID);
 
         ArrayList<String> tableIDList = usersList.get(0);
         ArrayList<String> tableNameList = usersList.get(1);
