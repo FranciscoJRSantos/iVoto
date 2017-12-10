@@ -99,7 +99,12 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     sql1 = "SELECT * FROM unidade_organica WHERE nome='" + nome + "';";
     protection = database.submitQuery(sql1);
     if (protection.isEmpty()){
-      sql2 = "INSERT INTO unidade_organica (nome,pertence) VALUES('" + nome + "','" + pertence + "');";
+      if (pertence != null){
+        sql2 = "INSERT INTO unidade_organica (nome,pertence) VALUES('" + nome + "','" + pertence + "');";
+      }
+      else{
+        sql2 = "INSERT INTO unidade_organica (nome,pertence) VALUES('" + nome + "',NULL);";
+      }
       database.submitUpdate(sql2);
 
     }
@@ -140,16 +145,22 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean createMesaVoto(String un_org_nome, int eleicao_id, int numero_cc) throws RemoteException{
 
     boolean answer = true;
+    int tipo_eleicao;
     ArrayList<String> check;
     String protection = "SELECT COUNT(*) FROM mesa_voto WHERE unidade_organica_nome LIKE '" + un_org_nome + "' AND eleicao_id='" + eleicao_id + "';";
     check = database.submitQuery(protection);
 
-    if ((Integer.parseInt(check.get(0))) > 1){
+    String protect = "SELECT tipo FROM eleicao WHERE id='" + eleicao_id + "';";
+
+    if ((Integer.parseInt(check.get(0))) >= 1){
       answer = false;
     }
     else{
-      String proc_call = "CALL createMesaVoto('" + un_org_nome + "'," + eleicao_id + "," + numero_cc + ");";
-      database.submitUpdate(proc_call);
+      tipo_eleicao = Integer.parseInt(database.submitQuery(protect).get(0));
+      if (tipo_eleicao != 1 && tipo_eleicao != 3){
+        String proc_call = "CALL createMesaVoto('" + un_org_nome + "'," + eleicao_id + "," + numero_cc + ");";
+        database.submitUpdate(proc_call);
+      }
     }
     return answer;
   }
@@ -200,15 +211,31 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<ArrayList<String>> resultados = new ArrayList<ArrayList<String>>();
     ArrayList<String> nome_lista;
     ArrayList<String> votos_lista;
+    ArrayList<String> total_votos_lista;
+    ArrayList<String> percentagem_votos_lista = new ArrayList<String>();
+    Integer total_votos;
+    Integer percentagem;
+
+    String sqlTotalVotos = "SELECT SUM(votos) FROM lista WHERE eleicao_id ='" + eleicao_id + "';";
 
     String sqlNome = "SELECT nome FROM lista WHERE eleicao_id='" + eleicao_id +"' ORDER BY votos DESC;";
     String sqlVotos = "SELECT votos FROM lista WHERE eleicao_id'" + eleicao_id +"' ORDER BY votos DESC;";
 
+    total_votos_lista = database.submitQuery(sqlTotalVotos);
     nome_lista = database.submitQuery(sqlNome);
     votos_lista = database.submitQuery(sqlVotos);
 
+    total_votos = Integer.parseInt(total_votos_lista.get(0));
+
+    for (String votos: votos_lista){
+        percentagem = Integer.parseInt(votos)/total_votos;
+        percentagem_votos_lista.add(String.valueOf(percentagem));
+    }
+
+    resultados.add(total_votos_lista);
     resultados.add(nome_lista);
     resultados.add(votos_lista);
+    resultados.add(percentagem_votos_lista);
 
     return resultados;
   }
@@ -236,9 +263,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> id;
     ArrayList<String> descricao;
     ArrayList<String> local;
-    String sql_id = "SELECT id FROM eleicao WHERE inicio < NOW();";
-    String sql_descricao = "SELECT descricao FROM eleicao WHERE inicio < NOW();";
-    String sql_local = "SELECT unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao uoe WHERE e.inicio < NOW() AND e.id = uoe.eleicao_id;";
+    String sql_id = "SELECT id FROM eleicao WHERE NOW() NOT BETWEEN inicio AND fim;";
+    String sql_descricao = "SELECT descricao FROM eleicao WHERE NOW() NOT BETWEEN inicio AND fim;";
+    String sql_local = "SELECT unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao uoe WHERE e.id = uoe.eleicao_id AND NOW() NOT BETWEEN inicio AND fim;";
     id = database.submitQuery(sql_id);
     descricao = database.submitQuery(sql_descricao);
     local = database.submitQuery(sql_local);
@@ -258,7 +285,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> local;
     String sql_id = "SELECT id FROM eleicao WHERE inicio < NOW() AND fim > NOW();";
     String sql_descricao = "SELECT descricao FROM eleicao WHERE inicio < NOW() AND fim > NOW();";
-    String sql_local = "SELECT unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao uoe WHERE e.inicio < NOW() AND e.fim() > NOW() AND e.id = uoe.eleicao_id;";
+    String sql_local = "SELECT unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao uoe WHERE e.id = uoe.eleicao_id AND NOW() NOT BETWEEN e.inicio AND e.fim;";
     id = database.submitQuery(sql_id);
     descricao = database.submitQuery(sql_descricao);
     local = database.submitQuery(sql_local);
@@ -447,9 +474,16 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     return true;
   }
 
-  public boolean updateMesaVotoUtilizadores(int numero_cc, String unidade_organica_nome , int id_eleicao) throws RemoteException{
+  public boolean updateMesaVotoUtilizadores(int numero_cc, int mesa_voto_numero, int id_eleicao) throws RemoteException{
 
-    String sql = "INSERT INTO mesa_voto_utilizador (mesa_voto_unidade_organica_nome, mesa_voto_eleicao_id, utilizador_numero_cc) VALUES (" +unidade_organica_nome + "," +  id_eleicao + "," + numero_cc + ") ON DUPLICATE KEY UPDATE SET mesa_voto_unidade_organica_nome = '" + unidade_organica_nome + "','" + id_eleicao + "','" + numero_cc + "' WHERE numero_cc ='" + numero_cc +"';";
+    String protection = "SELECT COUNT(*) FROM mesa_voto_utilizador WHERE mesa_voto_numero = '" + mesa_voto_numero + "' AND eleicao_id = '" + id_eleicao + "';";
+    ArrayList<String> aux = database.submitQuery(protection);
+
+    if (Integer.parseInt(aux.get(0)) > 3){
+        return false;
+    }
+
+    String sql = "INSERT INTO mesa_voto_utilizador (mesa_voto_numero, eleicao_id, utilizador_numero_cc) VALUES (" + mesa_voto_numero + "," +  id_eleicao + "," + numero_cc + ") ON DUPLICATE KEY UPDATE mesa_voto_numero = '" + mesa_voto_numero+ "', eleicao_id = '" + id_eleicao + "', utilizador_numero_cc = '" + numero_cc + "';";
 
     database.submitUpdate(sql);
 

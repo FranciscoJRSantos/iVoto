@@ -319,8 +319,9 @@ public class Consola {
             return;
         }
         System.out.println("Resultados: ");
+        System.out.println("Total de votos: " + results.get(0));
         for (int i = 0; i < results.get(0).size(); i++) {
-            System.out.println("-> " + results.get(0).get(i) + " - nº de votos - " + results.get(1).get(i));
+            System.out.println("-> " + results.get(1).get(i) + " - nº de votos -> " + results.get(2).get(i) + " - percentagem de votos -> " + results.get(3).get(i));
         }
     }
 
@@ -467,8 +468,7 @@ public class Consola {
         if (operation == 1) {
             System.out.println("Insira o numero de cartão de cidadão da nova pessoa!");
             ccn = getPhoneOrCCN(2);
-            un_org_nome = getUniOrgNome();
-            verify = r.updateMesaVotoUtilizadores(ccn, un_org_nome , elecID);
+            verify = r.updateMesaVotoUtilizadores(ccn, tableID, elecID);
 
 
         } else {
@@ -479,7 +479,7 @@ public class Consola {
             System.out.println("Insira o numero de cartão de cidadão da nova pessoa!");
             un_org_nome = getUniOrgNome();
             ccn = getPhoneOrCCN(2);
-            verify = r.updateMesaVotoUtilizadores(ccn, un_org_nome , elecID);
+            verify = r.updateMesaVotoUtilizadores(ccn, tableID, elecID);
         }
 
         if (verify) {
@@ -604,12 +604,13 @@ public class Consola {
             System.out.println("Não existe nenhuma mesa.");
             return -1;
         }
+        System.out.println(tableList);
         System.out.println(tableList.get(0));
         System.out.println(tableList.get(1));
         while (flag) {
             flag = false;
             System.out.println("Qual mesa de voto?");
-            for (int i = 0; i < tableList.size(); i++) {
+            for (int i = 0; i < tableList.get(0).size(); i++) {
                 System.out.println(i + 1 + " -> " + tableList.get(0).get(i) + " - " + tableList.get(1).get(i));
             }
             System.out.printf("Opção: ");
@@ -791,7 +792,8 @@ public class Consola {
             case 1:
               System.out.printf("Insira o nome da nova unidade organica: ");
               name = sc.nextLine();
-              System.out.printf("Insira o nome da faculdade à qual o departamento adicionado pertence: (Deixar vazio se for uma faculdade) ");
+              System.out.printf("Insira o nome da faculdade à qual o departamento adicionado pertence: (Deixar vazio se for uma faculdade): ");
+              un_org_nome = sc.nextLine();
               verify = r.createUnidadeOrganica(name, un_org_nome);
               break;
             case 2:

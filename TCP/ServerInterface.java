@@ -30,7 +30,7 @@ public interface ServerInterface extends Remote{
   public boolean updateEleicoesData(int id, String newdate, int flag) throws RemoteException;
   public boolean updateEleicoesDescricao(int id, String newdate) throws RemoteException;
   public boolean updateUnidadeOrganica(String nome, String novo_nome, int flag) throws RemoteException;
-  public boolean updateMesaVotoUtilizadores(int numero_cc, String unidade_organica_nome , int id_eleicao);
+  public boolean updateMesaVotoUtilizadores(int numero_cc, int mesa_voto_numero, int id_eleicao) throws RemoteException;
   // Delete
   public boolean deleteUtilizador(int numero_cc) throws RemoteException;
   public boolean deleteUO(String nome) throws RemoteException;

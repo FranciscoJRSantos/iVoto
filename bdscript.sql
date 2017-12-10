@@ -56,7 +56,7 @@ CREATE TABLE eleicao_utilizador(
 	unidade_organica_nome        varchar(512),
 	eleicao_id		             int,
 	utilizador_numero_cc		 int,
-    mesa_voto_numero             int, 
+	mesa_voto_numero		     int NOT NULL,
     data_voto                    DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -69,8 +69,10 @@ CREATE TABLE mesa_voto_utilizador(
 CREATE TABLE utilizador_lista(
 	utilizador_numero_cc int,
 	lista_eleicao_id	 int,
-	lista_nome		 varchar(512) NOT NULL
+	lista_nome		     varchar(512) NOT NULL
 );
+
+ALTER TABLE unidade_organica ADD CONSTRAINT unidade_organica_fk1 FOREIGN KEY (pertence) REFERENCES unidade_organica(nome) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE mesa_voto ADD CONSTRAINT mesa_voto_fk1 FOREIGN KEY (unidade_organica_nome) REFERENCES unidade_organica(nome) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -101,4 +103,6 @@ ALTER TABLE eleicao_utilizador ADD CONSTRAINT eleicao_utilizador_fk1 FOREIGN KEY
 ALTER TABLE eleicao_utilizador ADD CONSTRAINT eleicao_utilizador_fk2 FOREIGN KEY (eleicao_id) REFERENCES eleicao(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE eleicao_utilizador ADD CONSTRAINT eleicao_utilizador_fk3 FOREIGN KEY (utilizador_numero_cc) REFERENCES utilizador(numero_cc) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE eleicao_utilizador ADD CONSTRAINT eleicao_utilizador_fk4 FOREIGN KEY (mesa_voto_numero) REFERENCES mesa_voto(numero) ON UPDATE CASCADE ON DELETE CASCADE;
 
