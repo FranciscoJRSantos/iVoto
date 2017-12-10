@@ -103,3 +103,5 @@ ALTER TABLE eleicao_utilizador ADD CONSTRAINT eleicao_utilizador_fk1 FOREIGN KEY
 ALTER TABLE eleicao_utilizador ADD CONSTRAINT eleicao_utilizador_fk2 FOREIGN KEY (eleicao_id) REFERENCES eleicao(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 ALTER TABLE eleicao_utilizador ADD CONSTRAINT eleicao_utilizador_fk3 FOREIGN KEY (utilizador_numero_cc) REFERENCES utilizador(numero_cc) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE eleicao_utilizador ADD CONSTRAINT eleicao_utilizador_fk4 FOREIGN KEY (unidade_organica_nome) REFERENCES mesa_voto(unidade_organica_nome) ON UPDATE CASCADE ON DELETE CASCADE;

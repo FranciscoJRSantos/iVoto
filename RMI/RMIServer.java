@@ -126,10 +126,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean createLista(String nome, int tipo, int eleicao_id, int numero_cc) throws RemoteException{
 
     boolean answer = true;
-    String protection = "SELECT * FROM eleicao WHERE id=" + eleicao_id + " AND inicio>NOW() AND fim > NOW();";
+    String protection = "SELECT * FROM eleicao WHERE id=" + eleicao_id + " AND NOW() NOT BETWEEN inicio AND fim;";
     ArrayList security = database.submitQuery(protection);
 
-    if (security.isEmpty()){
+    if (!security.isEmpty()){
       if ((tipo >= 0) && (tipo < 3)){
         String proc_call = "CALL createLista('" + nome + "'," + tipo + "," + eleicao_id + "," + numero_cc + ");";
         database.submitUpdate(proc_call);
@@ -437,7 +437,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean updateEleicoesDescricao(int id, String newdate) throws RemoteException{
 
     boolean toClient = true;
-    String sql = "SELECT * FROM eleicao WHERE ID='" + id + "' AND inicio < NOW() AND fim > NOW();";
+    String sql = "SELECT * FROM eleicao WHERE ID='" + id + "' AND NOW() NOT BETWEEN inicio AND fim;";
     ArrayList<String> aux = database.submitQuery(sql);
     if (aux.isEmpty()){
       toClient = false;
@@ -452,7 +452,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
   public boolean updateEleicoesData(int id, String newdate, int flag) throws RemoteException{
 
     boolean toClient = true;
-    String sql = "SELECT * FROM eleicao WHERE ID='" + id + "' AND inicio < NOW() AND fim > NOW();";
+    String sql = "SELECT * FROM eleicao WHERE ID='" + id + "' AND NOW() NOT BETWEEN inicio AND fim;";
     ArrayList<String> aux = database.submitQuery(sql);
     if (aux.isEmpty()){
       toClient = false;
@@ -518,6 +518,11 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     }
     else if (aux3.isEmpty()){
       aux3.add("Null");
+    }
+
+    String sql7 = "SELECT validade_cc FROM utilizador WHERE numero_cc = '" + cc + "' AND validade_cc > NOW();";
+    if(database.submitQuery(sql7).isEmpty()){
+      return null;
     }
 
     System.out.println(aux3);
