@@ -99,7 +99,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     sql1 = "SELECT * FROM unidade_organica WHERE nome='" + nome + "';";
     protection = database.submitQuery(sql1);
     if (protection.isEmpty()){
-      if (pertence != null){
+      if (pertence != null &&  pertence.trim().length() != 0){
         sql2 = "INSERT INTO unidade_organica (nome,pertence) VALUES('" + nome + "','" + pertence + "');";
       }
       else{
@@ -197,6 +197,16 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
   }
 
+  public ArrayList<String> showAllUONotFac() throws RemoteException{
+      
+      ArrayList<String> departamento;
+      String sql_uo = "SELECT nome FROM unidade_organica WHERE pertence IS NULL";
+
+      departamento = database.submitQuery(sql_uo);
+
+      return departamento;
+  }
+
   public ArrayList<String> showEleicao(int id) throws RemoteException{
 
     ArrayList<String> eleicao;
@@ -263,9 +273,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> id;
     ArrayList<String> descricao;
     ArrayList<String> local;
-    String sql_id = "SELECT id FROM eleicao WHERE NOW() NOT BETWEEN inicio AND fim;";
-    String sql_descricao = "SELECT descricao FROM eleicao WHERE NOW() NOT BETWEEN inicio AND fim;";
-    String sql_local = "SELECT unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao uoe WHERE e.id = uoe.eleicao_id AND NOW() NOT BETWEEN inicio AND fim;";
+    String sql_id = "SELECT id FROM eleicao WHERE inicio < NOW() AND NOW() NOT BETWEEN inicio AND fim;";
+    String sql_descricao = "SELECT descricao FROM eleicao WHERE inicio < NOW() AND NOW() NOT BETWEEN inicio AND fim;";
+    String sql_local = "SELECT unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao uoe WHERE e.id = uoe.eleicao_id AND inicio < NOW() AND NOW() NOT BETWEEN inicio AND fim;";
     id = database.submitQuery(sql_id);
     descricao = database.submitQuery(sql_descricao);
     local = database.submitQuery(sql_local);
@@ -283,9 +293,9 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> id;
     ArrayList<String> descricao;
     ArrayList<String> local;
-    String sql_id = "SELECT id FROM eleicao WHERE inicio < NOW() AND fim > NOW();";
-    String sql_descricao = "SELECT descricao FROM eleicao WHERE inicio < NOW() AND fim > NOW();";
-    String sql_local = "SELECT unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao uoe WHERE e.id = uoe.eleicao_id AND NOW() NOT BETWEEN e.inicio AND e.fim;";
+    String sql_id = "SELECT id FROM eleicao WHERE inicio > NOW() AND NOW() NOT BETWEEN inicio AND fim;";
+    String sql_descricao = "SELECT descricao FROM eleicao WHERE inicio > NOW() AND NOW() NOT BETWEEN inicio AND fim;";
+    String sql_local = "SELECT unidade_organica_nome FROM eleicao AS e, unidade_organica_eleicao uoe WHERE e.id = uoe.eleicao_id AND inicio > NOW() AND NOW() NOT BETWEEN inicio AND fim;";
     id = database.submitQuery(sql_id);
     descricao = database.submitQuery(sql_descricao);
     local = database.submitQuery(sql_local);
@@ -357,7 +367,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     ArrayList<String> localizacao_mesas;
 
     String sql_mesas = "SELECT numero FROM mesa_voto WHERE eleicao_id=" + eleicao_id + ";";
-    String sql_un_org = "SELECT unidade_organica_nome FROM unidade_organica_eleicao WHERE eleicao_id =" + eleicao_id + ";";
+    String sql_un_org = "SELECT unidade_organica_nome FROM unidade_organica_eleicao WHERE eleicao_id =" + eleicao_id + " GROUP BY unidade_organica_nome;";
     numero_mesas = database.submitQuery(sql_mesas);
     localizacao_mesas = database.submitQuery(sql_un_org);
 
