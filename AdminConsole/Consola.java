@@ -130,12 +130,10 @@ public class Consola {
                 System.out.println("5-Gerir Mesas de Voto");
                 System.out.println("6-Alterar Propriedades de Eleição");
                 System.out.println("7-Consulta de Local de Voto");
-                System.out.println("8-Estado das Mesas de Voto (tempo real)");
-                System.out.println("9-Consulta dos eleitores (tempo real)");
-                System.out.println("10-Consultar Eleições Passadas");
-                System.out.println("11-Voto Antecipado");
-                System.out.println("12-Alterar Dados Pessoais");
-                System.out.println("13-Gerir Membros das Mesas de Voto");
+                System.out.println("8-Consultar Eleições Passadas");
+                System.out.println("9-Voto Antecipado");
+                System.out.println("10-Alterar Dados Pessoais");
+                System.out.println("11-Gerir Membros das Mesas de Voto");
                 System.out.println("0-Sair\n");
                 System.out.printf("Opção: ");
 
@@ -143,7 +141,7 @@ public class Consola {
                 if (option < 0 || option > 13) {
                     System.out.println("Insira um valor válido, por favor.\n");
                 }
-            } while (option < 0 || option > 13);
+            } while (option < 0 || option > 11);
 
             try {
                 switch (option) {
@@ -176,22 +174,18 @@ public class Consola {
                         break;
 
                     case 8:
-                        break;
-                    case 9:
-                        break;
-                    case 10:
                         checkPastElections();
                         break;
 
-                    case 11:
+                    case 9:
                         anticipatedVote();
                         break;
 
-                    case 12:
+                    case 10:
                         editPerson();
                         break;
 
-                    case 13:
+                    case 11:
                         manageTablePersonal();
                         break;
                 }
@@ -218,15 +212,14 @@ public class Consola {
             System.out.println("3-Telemóvel");
             System.out.println("4-Número de cartão de cidadão");
             System.out.println("5-Validade do cartão de cidadão");
-            System.out.println("6-Departamento");
-            System.out.println("7-Faculdade");
-            System.out.println("8-Palavra-Pass");
+            System.out.println("6-Unidade Organica");
+            System.out.println("7-Palavra-Pass");
             System.out.printf("Opção: ");
             operation = readInt();
-            if (operation <= 0 || operation > 8) {
+            if (operation <= 0 || operation > 7) {
                 System.out.println("Insira um valor válido, por favor.\n");
             }
-        } while (operation <= 0 || operation > 8);
+        } while (operation <= 0 || operation > 7);
 
         switch (operation) {
             case 1:
@@ -337,7 +330,7 @@ public class Consola {
         ccn = getPhoneOrCCN(2);
 
         if (r.showPersonVotingInfo(ccn, elecID) == null) {
-            System.out.println("Erro!");
+            System.out.println("Não existem dados!");
         } else {
             System.out.println(r.showPersonVotingInfo(ccn, elecID));
         }
@@ -411,7 +404,7 @@ public class Consola {
         } while (operation <= 0 || operation > 2);
 
 
-        int elecID = pickElections(1);
+        int elecID = pickElections(2);
         if (elecID == -1) {
             System.out.println("Erro!");
             return;
@@ -465,6 +458,9 @@ public class Consola {
 
         int elecID = pickElections(2);
         tableID = pickTableFromElection(elecID);
+        if (tableID == -1){
+          return;
+        }
         if (operation == 1) {
             System.out.println("Insira o numero de cartão de cidadão da nova pessoa!");
             ccn = getPhoneOrCCN(2);
@@ -528,7 +524,7 @@ public class Consola {
     private void manageLists() throws RemoteException {
         Scanner sc = new Scanner(System.in);
 
-        int electionId = pickElections(1);
+        int electionId = pickElections(2);
         if (electionId == -1) {
             System.out.println("Erro!");
             return;
@@ -600,7 +596,7 @@ public class Consola {
         int option = 0;
         String table;
         
-        if (tableList == null) {
+        if (tableList.get(0).isEmpty()) {
             System.out.println("Não existe nenhuma mesa.");
             return -1;
         }

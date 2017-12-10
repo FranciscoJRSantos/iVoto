@@ -157,7 +157,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     }
     else{
       tipo_eleicao = Integer.parseInt(database.submitQuery(protect).get(0));
-      if (tipo_eleicao != 1 && tipo_eleicao != 3){
+      if ((tipo_eleicao != 1 && tipo_eleicao != 3 ) || (Integer.parseInt(check.get(0)) < 1)){
         String proc_call = "CALL createMesaVoto('" + un_org_nome + "'," + eleicao_id + "," + numero_cc + ");";
         database.submitUpdate(proc_call);
       }
@@ -356,6 +356,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     String sql = "SELECT * FROM eleicao_utilizador WHERE utilizador_numero_cc ='" + numero_cc + "' AND eleicao_id = '" + eleicao_id + "';";
     info = database.submitQuery(sql);
 
+    if (info.isEmpty()){
+      info = null; 
+    }
+
     return info;
 
   }
@@ -414,10 +418,10 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
         break;
       case 6:
         aux = Integer.parseInt(new_info);
-        sql = "UPDATE unidade_organica_utilizador SET unidade_organica_nome='" + aux +";";
+        sql = "UPDATE unidade_organica_utilizador SET unidade_organica_nome='" + aux +"';";
         break;
       case 7:
-        sql = "UPDATE utilizador SET password_hashed = " + new_info + ";";
+        sql = "UPDATE utilizador SET password_hashed = '" + new_info + "' WHERE numero_cc = '" + cc + "';";
       default:
         break;
 
